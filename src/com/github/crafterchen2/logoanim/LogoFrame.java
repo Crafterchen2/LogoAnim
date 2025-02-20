@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 public class LogoFrame extends JFrame {
 	
@@ -38,6 +39,19 @@ public class LogoFrame extends JFrame {
 			private Point prev = null;
 			
 			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				int wheelRotation = e.getWheelRotation();
+				if (getScale() < 10) wheelRotation = Math.max(0,wheelRotation);
+				if (getScale() > 80) wheelRotation = Math.min(0,wheelRotation);
+				setScale(getScale() + wheelRotation);
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				repaint();
+			}
+			
+			@Override
 			public void mousePressed(MouseEvent e) {
 				prev = e.getLocationOnScreen();
 			}
@@ -54,6 +68,7 @@ public class LogoFrame extends JFrame {
 				}
 			}
 		};
+		addMouseWheelListener(mouseAdapter);
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
 		setVisible(true);

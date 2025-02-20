@@ -7,6 +7,9 @@ import com.github.crafterchen2.logoanim.RegionEnum;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.EventListener;
 import java.util.Objects;
 
 public class ImageSelector<T extends AssetManager> extends JComponent {
@@ -17,6 +20,7 @@ public class ImageSelector<T extends AssetManager> extends JComponent {
 	public final RegionEnum reg;
 	public final int scale;
 	private final ButtonGroup group = new ButtonGroup();
+	private final ArrayList<Listener> listeners = new ArrayList<>();
 	
 	public ImageSelector(T[] arr, int cols, RegionEnum reg) {
 		this(arr, cols, reg, 10, true);
@@ -30,19 +34,46 @@ public class ImageSelector<T extends AssetManager> extends JComponent {
 		buttons = new JToggleButton[this.arr.length];
 		this.reg = reg;
 		this.scale = scale;
-		setLayout(new GridLayout(Math.ceilDiv(arr.length, cols), cols));
+		setLayout(new GridLayout(Math.ceilDiv(0, cols), cols));
 		if (allowEmpty) {
 			JToggleButton button = new JToggleButton("", true);
 			button.setBackground(new Color(0,0,0));
+			button.addActionListener(_ -> signalUpdate());
 			add(button);
 			group.add(button);
 		}
 		for (int i = 0; i < arr.length; i++) {
 			buttons[i] = new JToggleButton(getIcon(arr[i]));
 			buttons[i].setBackground(new Color(0, 0, 0));
+			buttons[i].addActionListener(_ -> signalUpdate());
 			add(buttons[i]);
 			group.add(buttons[i]);
 		}
+	}
+	
+	public void removeImageChangedListener(Listener listener) {
+		listeners.remove(listener);
+	}
+	
+	public void addImageChangedListener(Listener listener) {
+		listeners.add(listener);
+	}
+	
+	private void signalUpdate(){
+		listeners.forEach(Listener::imageChanged);
+	}
+	
+	public void setSelected(int index) {
+		if (index < 0 || index >= group.getButtonCount()) throw new IndexOutOfBoundsException();
+		Enumeration<AbstractButton> elements = group.getElements();
+		AbstractButton button = null;
+		int counter = 0;
+		while (elements.hasMoreElements()) {
+			button = elements.nextElement();
+			if (counter == index) break;
+			counter++;
+		}
+		Objects.requireNonNull(button).setSelected(true);
 	}
 	
 	public T getSelected() {
@@ -71,10 +102,17 @@ public class ImageSelector<T extends AssetManager> extends JComponent {
 	
 	private ImageIcon getIcon(AssetManager asset) {
 		BufferedImage img = asset.getImg();
-		BufferedImage rv = AssetManager.recolorImg((mood != null) ? mood : MoodEnum.NORMAL , img);
+		if (mood != null) img = AssetManager.recolorImg(mood , img);
 		int w = (int) (scale * RegionEnum.base * (Math.abs(reg.w) * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base)));
 		int h = (int) (scale * RegionEnum.base * (Math.abs(reg.h) * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base)));
-		return new ImageIcon(rv.getScaledInstance(w,h, Image.SCALE_FAST));
+		return new ImageIcon(img.getScaledInstance(w,h, Image.SCALE_FAST));
+	}
+	
+	@FunctionalInterface
+	public interface Listener extends EventListener {
+		
+		void imageChanged();
+		
 	}
 	
 }

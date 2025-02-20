@@ -47,9 +47,7 @@ public enum AssetEnum implements AssetManager {
 	public void paint(Graphics g, RegionEnum reg, MoodEnum mood) {
 		BufferedImage img = getImg();
 		Rectangle2D b = g.getClip().getBounds2D();
-		if (mood != null) {
-			img = AssetManager.recolorImg(mood, img);
-		}
+		if (mood != null) img = AssetManager.recolorImg(mood, img);
 		int w = (int) (b.getWidth() * reg.w * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base));
 		int h = (int) (b.getHeight() * reg.h * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base));
 		int x = (int) (b.getX() + b.getWidth() * reg.x + Math.min(w, 0));

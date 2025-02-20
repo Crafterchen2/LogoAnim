@@ -16,15 +16,25 @@ public class MoodSelector extends JComponent {
 	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
 	public final int outerMargin = 10;
 	public final int innerMargin = 5;
+	public final int minSizeButtons = 75;
 	private final ArrayList<Listener> listeners = new ArrayList<>();
 	
 	public MoodSelector() {
+		setDoubleBuffered(true);
 		Border emptyBorder = BorderFactory.createEmptyBorder(outerMargin * 2, outerMargin * 2, outerMargin * 2, outerMargin * 2);
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED), emptyBorder));
 		setLayout(new GridLayout(2,2, outerMargin * 3, outerMargin * 3));
-		int sqrtMoods = (int) Math.ceil(Math.sqrt(MoodEnum.values().length + 1));
+		int nButtons = MoodEnum.values().length + 1;
+		int sqrtMoods = (int) Math.ceil(Math.sqrt(nButtons));
+		int minHeight = Math.ceilDiv(nButtons, sqrtMoods) * minSizeButtons + Math.floorDiv(nButtons, sqrtMoods) * innerMargin;
+		minHeight += 2 * outerMargin * 2;
+		minHeight += outerMargin * 3;
+		int minWidth = Math.min(nButtons, sqrtMoods) * minSizeButtons + Math.max(0, Math.min(nButtons, sqrtMoods) - 1) * minSizeButtons;
+		minWidth += 2 * outerMargin * 2;
+		minWidth += outerMargin * 3;
+		setPreferredSize(new Dimension(minWidth, minHeight));
 		for (RegionEnum reg : RegionEnum.values()) {
-			JPanel panel = new JPanel(new GridLayout(sqrtMoods, sqrtMoods, innerMargin, innerMargin));
+			JPanel panel = new JPanel(new GridLayout(0, sqrtMoods, innerMargin, innerMargin));
 			panel.setOpaque(false);
 			panel.add(new MoodButton(reg, null));
 			for (MoodEnum mood : MoodEnum.values()) {
@@ -61,12 +71,6 @@ public class MoodSelector extends JComponent {
 	}
 	
 	@Override
-	public Dimension getPreferredSize() {
-		int min = Math.min(getWidth(), getHeight());
-		return new Dimension(min, min);
-	}
-	
-	@Override
 	protected void paintComponent(Graphics g) {
 		g.setColor(safeGetMoodColor(RegionEnum.DECO));
 		g.fillRect(0,0,getWidth(), getHeight());
@@ -89,6 +93,7 @@ public class MoodSelector extends JComponent {
 			this.reg = reg;
 			this.mood = mood;
 			setBorder(BorderFactory.createLineBorder(new Color(96, 96, 96),3));
+			setMinimumSize(new Dimension(minSizeButtons, minSizeButtons));
 			addActionListener(_ -> {
 				setMood(reg, mood);
 				signalUpdate();
@@ -103,7 +108,7 @@ public class MoodSelector extends JComponent {
 	}
 	
 	@FunctionalInterface
-	public static interface Listener extends EventListener {
+	public interface Listener extends EventListener {
 		
 		void moodChanged();
 		

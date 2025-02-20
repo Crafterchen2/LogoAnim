@@ -23,18 +23,34 @@ public class LogoControl extends JPanel {
 	
 	public LogoControl(LogoFrame logo) {
 		setLogo(logo);
-		slider = new JSlider(0, 100, 20);
+		setLayout(new BorderLayout(3,3));
+		setPreferredSize(moodSelector.getPreferredSize());
+		slider = new JSlider(10, 80, 20);
 		leftSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
 		rightSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
 		smileSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.SMILE), 1, RegionEnum.SMILE);
 		decoSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
 		JButton repaintButton = new JButton("Repaint");
+		leftSelector.setSelected(4);
+		rightSelector.setSelected(4);
+		smileSelector.setSelected(2);
+		decoSelector.setSelected(0);
+		moodSelector.setMood(RegionEnum.LEFT_EYE, MoodEnum.NORMAL);
+		moodSelector.setMood(RegionEnum.RIGHT_EYE, MoodEnum.NORMAL);
+		moodSelector.setMood(RegionEnum.SMILE, MoodEnum.NORMAL);
+		moodSelector.setMood(RegionEnum.DECO, null);
 		slider.setMinorTickSpacing(5);
 		slider.setMajorTickSpacing(20);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
+		slider.setOrientation(JSlider.VERTICAL);
 		slider.addChangeListener(_ -> getLogo().setScale(slider.getValue()));
 		repaintButton.addActionListener(_ -> repaintLogo(true));
+		ImageSelector.Listener imgListener = () -> repaintLogo(true);
+		leftSelector.addImageChangedListener(imgListener);
+		rightSelector.addImageChangedListener(imgListener);
+		smileSelector.addImageChangedListener(imgListener);
+		decoSelector.addImageChangedListener(imgListener);
 		moodSelector.addMoodChangedListener(() -> {
 			LogoFrame l = getLogo();
 			MoodEnum mood = moodSelector.getMood(RegionEnum.LEFT_EYE);
@@ -51,22 +67,20 @@ public class LogoControl extends JPanel {
 			decoSelector.setMood(mood);
 			repaintLogo(false);
 		});
-		add(moodSelector);
-		add(leftSelector);
-		add(rightSelector);
-		add(smileSelector);
-		add(decoSelector);
-		add(slider);
-		add(repaintButton);
-		setLayout(new GridLayout(0, 1));
+		JPanel p = new JPanel(new GridLayout(2,2));
+		p.add(rightSelector);
+		p.add(leftSelector);
+		p.add(smileSelector);
+		p.add(decoSelector);
+		add(p, BorderLayout.CENTER);
+		add(moodSelector, BorderLayout.NORTH);
+		add(slider, BorderLayout.WEST);
+		add(repaintButton, BorderLayout.SOUTH);
+		repaintLogo(true);
 	}
 	//} Constructor
 	
 	//Methods {
-	
-	private <T extends AssetManager> JComboBox<T> setupComboBox(T[] src, AssetType filter) {
-		return new JComboBox<>(filterArray(src, filter));
-	}
 	
 	private static <T extends AssetManager> T[] filterArray(T[] src, AssetType filter) {
 		return Arrays.stream(src).filter(assetEnum -> assetEnum.getType() == filter).toList().toArray(Arrays.copyOf(src, 0));
