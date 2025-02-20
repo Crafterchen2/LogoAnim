@@ -1,6 +1,6 @@
 package com.github.crafterchen2.logoanim.components;
 
-import com.github.crafterchen2.logoanim.AssetManager;
+import com.github.crafterchen2.logoanim.AssetEnum;
 import com.github.crafterchen2.logoanim.MoodEnum;
 import com.github.crafterchen2.logoanim.RegionEnum;
 
@@ -12,21 +12,21 @@ import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.Objects;
 
-public class ImageSelector<T extends AssetManager> extends JComponent {
+public class ImageSelector extends JComponent {
 	
 	private MoodEnum mood = MoodEnum.NORMAL;
-	private final T[] arr;
+	private final AssetEnum[] arr;
 	private final JToggleButton[] buttons;
 	public final RegionEnum reg;
 	public final int scale;
 	private final ButtonGroup group = new ButtonGroup();
 	private final ArrayList<Listener> listeners = new ArrayList<>();
 	
-	public ImageSelector(T[] arr, int cols, RegionEnum reg) {
+	public ImageSelector(AssetEnum[] arr, int cols, RegionEnum reg) {
 		this(arr, cols, reg, 10, true);
 	}
 	
-	public ImageSelector(T[] arr, int cols, RegionEnum reg, int scale, boolean allowEmpty) {
+	public ImageSelector(AssetEnum[] arr, int cols, RegionEnum reg, int scale, boolean allowEmpty) {
 		if (cols < 1) throw new IllegalArgumentException("cols must be at least 1.");
 		if (arr == null) throw new IllegalArgumentException("arr must not be null.");
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
@@ -76,7 +76,7 @@ public class ImageSelector<T extends AssetManager> extends JComponent {
 		Objects.requireNonNull(button).setSelected(true);
 	}
 	
-	public T getSelected() {
+	public AssetEnum getSelected() {
 		ButtonModel model = group.getSelection();
 		if (model == null) return null;
 		for (int i = 0; i < arr.length; i++) {
@@ -100,9 +100,9 @@ public class ImageSelector<T extends AssetManager> extends JComponent {
 	    return mood;
 	}
 	
-	private ImageIcon getIcon(AssetManager asset) {
+	private ImageIcon getIcon(AssetEnum asset) {
 		BufferedImage img = asset.getImg();
-		if (mood != null) img = AssetManager.recolorImg(mood , img);
+		if (mood != null) img = AssetEnum.recolorImg(mood , img);
 		int w = (int) (scale * RegionEnum.base * (Math.abs(reg.w) * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base)));
 		int h = (int) (scale * RegionEnum.base * (Math.abs(reg.h) * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base)));
 		return new ImageIcon(img.getScaledInstance(w,h, Image.SCALE_FAST));

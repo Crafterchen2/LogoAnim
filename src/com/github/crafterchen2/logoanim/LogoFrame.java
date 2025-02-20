@@ -9,10 +9,10 @@ import java.awt.event.MouseWheelEvent;
 public class LogoFrame extends JFrame {
 	
 	private int scale = 20;
-	public AssetManager leftEye = null;
-	public AssetManager rightEye = null;
-	public AssetManager smile = null;
-	public AssetManager deco = null;
+	public AssetEnum leftEye = null;
+	public AssetEnum rightEye = null;
+	public AssetEnum smile = null;
+	public AssetEnum deco = null;
 	public MoodEnum leftEyeMood = null;
 	public MoodEnum rightEyeMood = null;
 	public MoodEnum smileMood = null;

@@ -11,7 +11,7 @@ public class LogoControl extends JPanel {
 	
 	//Fields {
 	private final JSlider slider;
-	private final ImageSelector<AssetEnum> leftSelector, rightSelector, smileSelector, decoSelector;
+	private final ImageSelector leftSelector, rightSelector, smileSelector, decoSelector;
 	private final MoodSelector moodSelector = new MoodSelector();
 	private LogoFrame logo;
 	//} Fields
@@ -26,10 +26,10 @@ public class LogoControl extends JPanel {
 		setLayout(new BorderLayout(3,3));
 		setPreferredSize(moodSelector.getPreferredSize());
 		slider = new JSlider(10, 80, 20);
-		leftSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
-		rightSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
-		smileSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.SMILE), 1, RegionEnum.SMILE);
-		decoSelector = new ImageSelector<>(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
+		leftSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
+		rightSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
+		smileSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.SMILE), 1, RegionEnum.SMILE);
+		decoSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
 		JButton repaintButton = new JButton("Repaint");
 		leftSelector.setSelected(4);
 		rightSelector.setSelected(4);
@@ -82,8 +82,8 @@ public class LogoControl extends JPanel {
 	
 	//Methods {
 	
-	private static <T extends AssetManager> T[] filterArray(T[] src, AssetType filter) {
-		return Arrays.stream(src).filter(assetEnum -> assetEnum.getType() == filter).toList().toArray(Arrays.copyOf(src, 0));
+	private static AssetEnum[] filterArray(AssetEnum[] src, AssetType filter) {
+		return Arrays.stream(src).filter(assetEnum -> assetEnum.getType() == filter).toList().toArray(new AssetEnum[0]);
 	}
 	
 	private void repaintLogo(boolean query) {
