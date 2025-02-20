@@ -12,16 +12,20 @@ import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.Objects;
 
+//Classes {
 public class ImageSelector extends JComponent {
 	
-	private MoodEnum mood = MoodEnum.NORMAL;
-	private final AssetEnum[] arr;
-	private final JToggleButton[] buttons;
+	//Fields {
 	public final RegionEnum reg;
 	public final int scale;
+	private final AssetEnum[] arr;
+	private final JToggleButton[] buttons;
 	private final ButtonGroup group = new ButtonGroup();
 	private final ArrayList<Listener> listeners = new ArrayList<>();
+	private MoodEnum mood = MoodEnum.NORMAL;
+	//} Fields
 	
+	//Constructor {
 	public ImageSelector(AssetEnum[] arr, int cols, RegionEnum reg) {
 		this(arr, cols, reg, 10, true);
 	}
@@ -37,7 +41,7 @@ public class ImageSelector extends JComponent {
 		setLayout(new GridLayout(Math.ceilDiv(0, cols), cols));
 		if (allowEmpty) {
 			JToggleButton button = new JToggleButton("", true);
-			button.setBackground(new Color(0,0,0));
+			button.setBackground(new Color(0, 0, 0));
 			button.addActionListener(_ -> signalUpdate());
 			add(button);
 			group.add(button);
@@ -50,7 +54,9 @@ public class ImageSelector extends JComponent {
 			group.add(buttons[i]);
 		}
 	}
+	//} Constructor
 	
+	//Methods {
 	public void removeImageChangedListener(Listener listener) {
 		listeners.remove(listener);
 	}
@@ -59,10 +65,41 @@ public class ImageSelector extends JComponent {
 		listeners.add(listener);
 	}
 	
-	private void signalUpdate(){
+	private void signalUpdate() {
 		listeners.forEach(Listener::imageChanged);
 	}
 	
+	private void updateButtons() {
+		for (int i = 0; i < arr.length; i++) {
+			buttons[i].setIcon(getIcon(arr[i]));
+		}
+	}
+	
+	private ImageIcon getIcon(AssetEnum asset) {
+		BufferedImage img = asset.getImg();
+		if (mood != null) img = AssetEnum.recolorImg(mood, img);
+		int w = (int) (scale * RegionEnum.base * (Math.abs(reg.w) * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base)));
+		int h = (int) (scale * RegionEnum.base * (Math.abs(reg.h) * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base)));
+		return new ImageIcon(img.getScaledInstance(w, h, Image.SCALE_FAST));
+	}
+	//} Methods
+	
+	//Getter {
+	public AssetEnum getSelected() {
+		ButtonModel model = group.getSelection();
+		if (model == null) return null;
+		for (int i = 0; i < arr.length; i++) {
+			if (Objects.equals(buttons[i].getModel(), model)) return arr[i];
+		}
+		return null;
+	}
+	
+	public MoodEnum getMood() {
+		return mood;
+	}
+	//} Getter
+	
+	//Setter {
 	public void setSelected(int index) {
 		if (index < 0 || index >= group.getButtonCount()) throw new IndexOutOfBoundsException();
 		Enumeration<AbstractButton> elements = group.getElements();
@@ -76,43 +113,22 @@ public class ImageSelector extends JComponent {
 		Objects.requireNonNull(button).setSelected(true);
 	}
 	
-	public AssetEnum getSelected() {
-		ButtonModel model = group.getSelection();
-		if (model == null) return null;
-		for (int i = 0; i < arr.length; i++) {
-			if (Objects.equals(buttons[i].getModel(), model)) return arr[i];
-		}
-		return null;
-	}
-	
-	private void updateButtons() {
-		for (int i = 0; i < arr.length; i++) {
-			buttons[i].setIcon(getIcon(arr[i]));
-		}
-	}
-	
-	public void setMood(MoodEnum mood){
-	    this.mood = mood;
+	public void setMood(MoodEnum mood) {
+		this.mood = mood;
 		updateButtons();
 	}
+	//} Setter
 	
-	public MoodEnum getMood(){
-	    return mood;
-	}
-	
-	private ImageIcon getIcon(AssetEnum asset) {
-		BufferedImage img = asset.getImg();
-		if (mood != null) img = AssetEnum.recolorImg(mood , img);
-		int w = (int) (scale * RegionEnum.base * (Math.abs(reg.w) * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base)));
-		int h = (int) (scale * RegionEnum.base * (Math.abs(reg.h) * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base)));
-		return new ImageIcon(img.getScaledInstance(w,h, Image.SCALE_FAST));
-	}
-	
+	//Interfaces {
 	@FunctionalInterface
 	public interface Listener extends EventListener {
 		
+		//Methods {
 		void imageChanged();
+		//} Methods
 		
 	}
+	//} Interfaces
 	
 }
+//} Classes

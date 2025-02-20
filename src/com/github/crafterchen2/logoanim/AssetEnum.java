@@ -30,6 +30,19 @@ public enum AssetEnum {
 	SAD("sad_smile", AssetType.SMILE),
 	;
 	
+	//Fields {
+	private static final HashMap<AssetEnum, BufferedImage> cache = HashMap.newHashMap(16);
+	private final String name;
+	private final AssetType type;
+	
+	//} Fields
+	//Constructor {
+	AssetEnum(String name, AssetType type) {
+		this.name = name;
+		this.type = type;
+	}
+	//} Constructor
+	
 	//Methods {
 	public static BufferedImage recolorImg(MoodEnum mood, BufferedImage img) {
 		if (mood == null) throw new IllegalArgumentException("mood must not be null.");
@@ -46,20 +59,6 @@ public enum AssetEnum {
 		return img;
 	}
 	
-	//Fields {
-	private static final HashMap<AssetEnum, BufferedImage> cache = HashMap.newHashMap(16);
-	
-	private final String name;
-	private final AssetType type;
-	//} Fields
-	
-	//Constructor {
-	AssetEnum(String name, AssetType type) {
-		this.name = name;
-		this.type = type;
-	}
-	//} Constructor
-	
 	public void paint(Graphics g, RegionEnum reg, MoodEnum mood) {
 		BufferedImage img = getImg();
 		Rectangle2D b = g.getClip().getBounds2D();
@@ -73,12 +72,13 @@ public enum AssetEnum {
 		g.drawImage(img, x, y, w, h, null);
 	}
 	
+	//Getter {
 	public String getName() {
 		return name;
 	}
 	
-	public AssetType getType(){
-	    return type;
+	public AssetType getType() {
+		return type;
 	}
 	
 	public BufferedImage getImg() {
@@ -98,6 +98,7 @@ public enum AssetEnum {
 		}
 		return cache.get(this);
 	}
+	//} Getter
 	
 }
 //} Enums

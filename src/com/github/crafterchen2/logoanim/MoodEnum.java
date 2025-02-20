@@ -2,6 +2,7 @@ package com.github.crafterchen2.logoanim;
 
 import java.awt.*;
 
+//Enums {
 public enum MoodEnum {
 	
 	NORMAL(new Color(0, 0, 255)),
@@ -10,13 +11,20 @@ public enum MoodEnum {
 	STUNNED(new Color(255, 255, 255)),
 	;
 	
-	private Color color;
+	//Fields {
+	private final Color color;
+	//} Fields
 	
+	//Constructor {
 	MoodEnum(Color color) {
 		this.color = color;
 	}
+	//} Constructor
 	
-	public Color getColor(){
-	    return color;
+	//Getter {
+	public Color getColor() {
+		return color;
 	}
+	//} Getter
 }
+//} Enums

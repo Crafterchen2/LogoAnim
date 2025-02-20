@@ -23,7 +23,7 @@ public class LogoControl extends JPanel {
 	
 	public LogoControl(LogoFrame logo) {
 		setLogo(logo);
-		setLayout(new BorderLayout(3,3));
+		setLayout(new BorderLayout(3, 3));
 		setPreferredSize(moodSelector.getPreferredSize());
 		slider = new JSlider(10, 80, 20);
 		leftSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
@@ -67,7 +67,7 @@ public class LogoControl extends JPanel {
 			decoSelector.setMood(mood);
 			repaintLogo(false);
 		});
-		JPanel p = new JPanel(new GridLayout(2,2));
+		JPanel p = new JPanel(new GridLayout(2, 2));
 		p.add(rightSelector);
 		p.add(leftSelector);
 		p.add(smileSelector);

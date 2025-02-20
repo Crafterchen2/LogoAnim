@@ -4,8 +4,10 @@ import com.github.crafterchen2.logoanim.components.LogoControl;
 
 import javax.swing.*;
 
+//Classes {
 public class Main {
 	
+	//Methods {
 	public static void main(String[] args) {
 		if (args.length == 0) {
 			LogoFrame l = new LogoFrame();
@@ -23,12 +25,14 @@ public class Main {
 		LogoFrame logo = controller.getLogo();
 		JFrame controlFrame = new JFrame("Logo Controller");
 		controlFrame.setMinimumSize(controller.getPreferredSize());
-		controlFrame.setSize(300,600);
+		controlFrame.setSize(300, 600);
 		controlFrame.setLocationRelativeTo(logo);
 		controlFrame.setLocation(controlFrame.getX() + logo.getWidth() + 50, controlFrame.getY());
 		controlFrame.setContentPane(controller);
 		controlFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		controlFrame.setVisible(true);
 	}
+	//} Methods
 	
 }
+//} Classes

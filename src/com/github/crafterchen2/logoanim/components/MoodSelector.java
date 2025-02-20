@@ -11,19 +11,23 @@ import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.HashMap;
 
+//Classes {
 public class MoodSelector extends JComponent {
 	
-	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
+	//Fields {
 	public final int outerMargin = 10;
 	public final int innerMargin = 5;
 	public final int minSizeButtons = 75;
+	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
 	private final ArrayList<Listener> listeners = new ArrayList<>();
+	//} Fields
 	
+	//Constructor {
 	public MoodSelector() {
 		setDoubleBuffered(true);
 		Border emptyBorder = BorderFactory.createEmptyBorder(outerMargin * 2, outerMargin * 2, outerMargin * 2, outerMargin * 2);
 		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED), emptyBorder));
-		setLayout(new GridLayout(2,2, outerMargin * 3, outerMargin * 3));
+		setLayout(new GridLayout(2, 2, outerMargin * 3, outerMargin * 3));
 		int nButtons = MoodEnum.values().length + 1;
 		int sqrtMoods = (int) Math.ceil(Math.sqrt(nButtons));
 		int minHeight = Math.ceilDiv(nButtons, sqrtMoods) * minSizeButtons + Math.floorDiv(nButtons, sqrtMoods) * innerMargin;
@@ -43,7 +47,9 @@ public class MoodSelector extends JComponent {
 			add(panel);
 		}
 	}
+	//} Constructor
 	
+	//Methods {
 	public void removeMoodChangedListener(Listener listener) {
 		listeners.remove(listener);
 	}
@@ -52,7 +58,7 @@ public class MoodSelector extends JComponent {
 		listeners.add(listener);
 	}
 	
-	private void signalUpdate(){
+	private void signalUpdate() {
 		listeners.forEach(Listener::moodChanged);
 	}
 	
@@ -67,13 +73,15 @@ public class MoodSelector extends JComponent {
 	
 	private Color safeGetMoodColor(RegionEnum reg) {
 		MoodEnum mood = getMood(reg);
-		return (mood != null) ? mood.getColor() : new Color(0,0,0);
+		return (mood != null) ? mood.getColor() : new Color(0, 0, 0);
 	}
+	//} Methods
 	
+	//Overrides {
 	@Override
 	protected void paintComponent(Graphics g) {
 		g.setColor(safeGetMoodColor(RegionEnum.DECO));
-		g.fillRect(0,0,getWidth(), getHeight());
+		g.fillRect(0, 0, getWidth(), getHeight());
 		g.setColor(safeGetMoodColor(RegionEnum.SMILE));
 		int width = getWidth() - outerMargin * 2;
 		int height = getHeight() - outerMargin * 2;
@@ -83,35 +91,49 @@ public class MoodSelector extends JComponent {
 		g.setColor(safeGetMoodColor(RegionEnum.RIGHT_EYE));
 		g.fillRect(outerMargin, outerMargin, width / 2, height);
 	}
+	//} Overrides
 	
+	//Classes {
 	private class MoodButton extends JButton {
 		
+		//Fields {
 		public final RegionEnum reg;
 		public final MoodEnum mood;
+		//} Fields
 		
+		//Constructor {
 		public MoodButton(RegionEnum reg, MoodEnum mood) {
 			this.reg = reg;
 			this.mood = mood;
-			setBorder(BorderFactory.createLineBorder(new Color(96, 96, 96),3));
+			setBorder(BorderFactory.createLineBorder(new Color(96, 96, 96), 3));
 			setMinimumSize(new Dimension(minSizeButtons, minSizeButtons));
 			addActionListener(_ -> {
 				setMood(reg, mood);
 				signalUpdate();
 			});
 		}
+		//} Constructor
 		
+		//Overrides {
 		@Override
 		protected void paintComponent(Graphics g) {
-			g.setColor((mood != null) ? mood.getColor() : new Color(0,0,0));
-			g.fillRect(0,0,getWidth(), getHeight());
+			g.setColor((mood != null) ? mood.getColor() : new Color(0, 0, 0));
+			g.fillRect(0, 0, getWidth(), getHeight());
 		}
+		//} Overrides
 	}
+	//} Classes
 	
+	//Interfaces {
 	@FunctionalInterface
 	public interface Listener extends EventListener {
 		
+		//Methods {
 		void moodChanged();
+		//} Methods
 		
 	}
+	//} Interfaces
 	
 }
+//} Classes
