@@ -12,11 +12,12 @@ import java.util.Objects;
 //Enums {
 public enum AssetEnum {
 	
-	Eye3x1("3x1_eye", AssetType.EYE),
-	Eye2x3("2x3_eye", AssetType.EYE),
-	Eye1x1("1x1_eye", AssetType.EYE),
-	Eye2x2("2x2_eye", AssetType.EYE),
-	Eye3x3("3x3_eye", AssetType.EYE),
+	EYE_2X1("2x1_eye", AssetType.EYE),
+	EYE_3X1("3x1_eye", AssetType.EYE),
+	EYE_1X1("1x1_eye", AssetType.EYE),
+	EYE_2X2("2x2_eye", AssetType.EYE),
+	EYE_3X3("3x3_eye", AssetType.EYE),
+	EYE_2X3("2x3_eye", AssetType.EYE),
 	BIG_TRIANGLE_RIGHT("big_triangle_right_eye", AssetType.EYE),
 	BIG_TRIANGLE_LEFT("big_triangle_left_eye", AssetType.EYE),
 	TRIANGLE_RIGHT("triangle_right_eye", AssetType.EYE),
@@ -28,6 +29,8 @@ public enum AssetEnum {
 	NEUTRAL("neutral_smile", AssetType.SMILE),
 	NORMAL("normal_smile", AssetType.SMILE),
 	SAD("sad_smile", AssetType.SMILE),
+	MULTI("multi_border_deco", AssetType.DECO),
+	SOLID("solid_border_deco", AssetType.DECO),
 	;
 	
 	//Fields {

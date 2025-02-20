@@ -6,6 +6,7 @@ import java.awt.*;
 public enum MoodEnum {
 	
 	NORMAL(new Color(0, 0, 255)),
+	SANS(new Color(0, 255, 255)),
 	MAD(new Color(255, 0, 0)),
 	GOOD(new Color(0, 255, 0)),
 	STUNNED(new Color(255, 255, 255)),

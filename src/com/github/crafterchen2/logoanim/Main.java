@@ -12,8 +12,8 @@ public class Main {
 		if (args.length == 0) {
 			LogoFrame l = new LogoFrame();
 			l.setScale(20);
-			l.leftEye = AssetEnum.Eye2x2;
-			l.rightEye = AssetEnum.Eye2x2;
+			l.leftEye = AssetEnum.EYE_2X2;
+			l.rightEye = AssetEnum.EYE_2X2;
 			l.smile = AssetEnum.NORMAL;
 			l.leftEyeMood = MoodEnum.NORMAL;
 			l.rightEyeMood = MoodEnum.NORMAL;
