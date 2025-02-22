@@ -10,10 +10,15 @@ import java.util.Arrays;
 public class LogoControl extends JPanel {
 	
 	//Fields {
-	private final JSlider slider;
-	private final ImageSelector leftSelector, rightSelector, smileSelector, decoSelector;
+	private final JSlider slider = new JSlider(RegionEnum.base, RegionEnum.base * 8);
+	private final ImageSelector leftSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
+	private final ImageSelector rightSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
+	private final ImageSelector smileSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.SMILE), 1, RegionEnum.SMILE);
+	private final ImageSelector decoSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
 	private final MoodSelector moodSelector = new MoodSelector();
 	private LogoFrame logo;
+	private boolean hasLogo;
+	private final JButton repaintButton = new JButton("Repaint");
 	//} Fields
 	
 	//Constructor {
@@ -25,26 +30,20 @@ public class LogoControl extends JPanel {
 		setLogo(logo);
 		setLayout(new BorderLayout(3, 3));
 		setPreferredSize(moodSelector.getPreferredSize());
-		slider = new JSlider(10, 80, 20);
-		leftSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
-		rightSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
-		smileSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.SMILE), 1, RegionEnum.SMILE);
-		decoSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
-		JButton repaintButton = new JButton("Repaint");
 		leftSelector.setSelected(4);
 		rightSelector.setSelected(4);
 		smileSelector.setSelected(2);
 		decoSelector.setSelected(0);
-		moodSelector.setMood(RegionEnum.LEFT_EYE, MoodEnum.NORMAL);
-		moodSelector.setMood(RegionEnum.RIGHT_EYE, MoodEnum.NORMAL);
-		moodSelector.setMood(RegionEnum.SMILE, MoodEnum.NORMAL);
-		moodSelector.setMood(RegionEnum.DECO, null);
 		slider.setMinorTickSpacing(5);
 		slider.setMajorTickSpacing(20);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.setOrientation(JSlider.VERTICAL);
-		slider.addChangeListener(_ -> getLogo().setScale(slider.getValue()));
+		slider.addChangeListener(_ -> {
+			LogoFrame l = getLogo();
+			if (!hasLogo) return;
+			l.setScale(slider.getValue());
+		});
 		repaintButton.addActionListener(_ -> repaintLogo(true));
 		ImageSelector.Listener imgListener = () -> repaintLogo(true);
 		leftSelector.addImageChangedListener(imgListener);
@@ -53,6 +52,7 @@ public class LogoControl extends JPanel {
 		decoSelector.addImageChangedListener(imgListener);
 		moodSelector.addMoodChangedListener(() -> {
 			LogoFrame l = getLogo();
+			if (!hasLogo) return;
 			MoodEnum mood = moodSelector.getMood(RegionEnum.LEFT_EYE);
 			l.leftEyeMood = mood;
 			leftSelector.setMood(mood);
@@ -68,8 +68,8 @@ public class LogoControl extends JPanel {
 			repaintLogo(false);
 		});
 		JPanel p = new JPanel(new GridLayout(2, 2));
-		p.add(rightSelector);
 		p.add(leftSelector);
+		p.add(rightSelector);
 		p.add(smileSelector);
 		p.add(decoSelector);
 		add(p, BorderLayout.CENTER);
@@ -88,6 +88,7 @@ public class LogoControl extends JPanel {
 	
 	private void repaintLogo(boolean query) {
 		LogoFrame l = getLogo();
+		if (!hasLogo) return;
 		if (query) {
 			l.setScale(slider.getValue());
 			l.leftEye = leftSelector.getSelected();
@@ -101,25 +102,19 @@ public class LogoControl extends JPanel {
 		}
 		l.repaint();
 	}
-	
-	private void createLogo() {
-		if (logo == null) {
-			logo = new LogoFrame() {
-				//Overrides {
-				@Override
-				public void dispose() {
-					setLogo(null);
-					super.dispose();
-				}
-				//} Overrides
-			};
-		}
-	}
 	//} Methods
 	
 	//Getter {
+	
+	/**
+	 * Returns the current logo enables / disables the components accordingly.
+	 * It is highly recommended to check the value of {@code hasLogo} before proceeding,
+	 * as this method can return {@code null}.
+	 * @return The current logo or {@code null} if no logo is set.
+	 */
 	public LogoFrame getLogo() {
-		if (logo == null) createLogo();
+		hasLogo = logo != null;
+		setEnabled(hasLogo);
 		return logo;
 	}
 	//} Getter
@@ -127,8 +122,35 @@ public class LogoControl extends JPanel {
 	//Setter {
 	public void setLogo(LogoFrame logo) {
 		this.logo = logo;
+		getLogo();
+		if (hasLogo) {
+			moodSelector.setMood(RegionEnum.LEFT_EYE, this.logo.leftEyeMood);
+			moodSelector.setMood(RegionEnum.RIGHT_EYE, this.logo.rightEyeMood);
+			moodSelector.setMood(RegionEnum.SMILE, this.logo.smileMood);
+			moodSelector.setMood(RegionEnum.DECO, this.logo.decoMood);
+			slider.setValue(this.logo.getScale());
+		} else {
+			moodSelector.setMood(RegionEnum.LEFT_EYE, MoodEnum.NORMAL);
+			moodSelector.setMood(RegionEnum.RIGHT_EYE, MoodEnum.NORMAL);
+			moodSelector.setMood(RegionEnum.SMILE, MoodEnum.NORMAL);
+			moodSelector.setMood(RegionEnum.DECO, null);
+			slider.setValue(RegionEnum.base);
+		}
 	}
 	//} Setter
 	
+	
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		moodSelector.setEnabled(enabled);
+		slider.setEnabled(enabled);
+		leftSelector.setEnabled(enabled);
+		rightSelector.setEnabled(enabled);
+		smileSelector.setEnabled(enabled);
+		decoSelector.setEnabled(enabled);
+		repaintButton.setEnabled(enabled);
+	}
 }
 //} Classes

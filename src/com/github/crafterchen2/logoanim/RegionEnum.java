@@ -3,8 +3,8 @@ package com.github.crafterchen2.logoanim;
 //Enums {
 public enum RegionEnum {
 	
-	RIGHT_EYE(4.0, 4.0, -3.0, -3.0),
-	LEFT_EYE(6.0, 4.0, 3.0, -3.0),
+	LEFT_EYE(4.0, 4.0, -3.0, -3.0),
+	RIGHT_EYE(6.0, 4.0, 3.0, -3.0),
 	SMILE(2.0, 6.0, 6.0, 2.0),
 	DECO(0.0, 0.0, 10.0, 10.0),
 	;

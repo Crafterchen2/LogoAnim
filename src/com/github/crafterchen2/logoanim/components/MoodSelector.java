@@ -20,6 +20,7 @@ public class MoodSelector extends JComponent {
 	public final int minSizeButtons = 75;
 	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
 	private final ArrayList<Listener> listeners = new ArrayList<>();
+	private final Color disabledColor = new Color(192,192,192);
 	//} Fields
 	
 	//Constructor {
@@ -59,7 +60,7 @@ public class MoodSelector extends JComponent {
 	}
 	
 	private void signalUpdate() {
-		listeners.forEach(Listener::moodChanged);
+		if (isEnabled()) listeners.forEach(Listener::moodChanged);
 	}
 	
 	public void setMood(RegionEnum reg, MoodEnum mood) {
@@ -72,8 +73,18 @@ public class MoodSelector extends JComponent {
 	}
 	
 	private Color safeGetMoodColor(RegionEnum reg) {
+		if (!isEnabled()) return disabledColor;
 		MoodEnum mood = getMood(reg);
 		return (mood != null) ? mood.getColor() : new Color(0, 0, 0);
+	}
+	
+	private static void setEnabled(Container c, boolean enabled) {
+		for (Component component : c.getComponents()) {
+			component.setEnabled(enabled);
+			if (component instanceof Container container) {
+				if (container.getComponents().length > 0) setEnabled(container, enabled);
+			}
+		}
 	}
 	//} Methods
 	
@@ -86,11 +97,17 @@ public class MoodSelector extends JComponent {
 		int width = getWidth() - outerMargin * 2;
 		int height = getHeight() - outerMargin * 2;
 		g.fillRect(outerMargin, outerMargin, width, height);
-		g.setColor(safeGetMoodColor(RegionEnum.LEFT_EYE));
-		g.fillRect(outerMargin, outerMargin, width, height /= 2);
 		g.setColor(safeGetMoodColor(RegionEnum.RIGHT_EYE));
+		g.fillRect(outerMargin, outerMargin, width, height /= 2);
+		g.setColor(safeGetMoodColor(RegionEnum.LEFT_EYE));
 		g.fillRect(outerMargin, outerMargin, width / 2, height);
 	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		setEnabled(this, enabled);
+	}	
 	//} Overrides
 	
 	//Classes {
@@ -117,7 +134,11 @@ public class MoodSelector extends JComponent {
 		//Overrides {
 		@Override
 		protected void paintComponent(Graphics g) {
-			g.setColor((mood != null) ? mood.getColor() : new Color(0, 0, 0));
+			if (!isEnabled()) {
+				g.setColor(disabledColor);
+			} else {
+				g.setColor((mood != null) ? mood.getColor() : new Color(0, 0, 0));
+			}
 			g.fillRect(0, 0, getWidth(), getHeight());
 		}
 		//} Overrides

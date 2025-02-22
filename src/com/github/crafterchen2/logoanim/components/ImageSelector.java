@@ -130,5 +130,13 @@ public class ImageSelector extends JComponent {
 	}
 	//} Interfaces
 	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		for (Component component : getComponents()) {
+			component.setEnabled(enabled);
+		}
+	}
+	
 }
 //} Classes
