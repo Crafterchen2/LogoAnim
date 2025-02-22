@@ -11,8 +11,9 @@ public class Main {
 	
 	//Methods {
 	public static void main(String[] args) {
-		boolean help, list;
-		if (help = arrContains(args, "-h", "-?", "--help", "help")) {
+		boolean help = arrContains(args, "-h", "-?", "--help", "help");
+		boolean list = arrContains(args, "-l", "--list");
+		if (help) {
 			System.out.println("Tool to create an interactive Crafterchen2 logo.");
 			System.out.println("Usage: [OPTIONS] [scale [leftEye rightEye smile deco [leftEyeMood rightEyeMood smileMood decoMood]]]");
 			System.out.println("-h, -?, --help, help : Prints this help and exits successfully.");
@@ -20,7 +21,7 @@ public class Main {
 			System.out.println("-p, --presets        : Opens with a presets frame attached.");
 			System.out.println("-l, --list           : Displays the possible values for the initial configuration and exits successfully.");
 		}
-		if (list = arrContains(args, "-l", "--list")) {
+		if (list) {
 			System.out.println("List of possible default asset values:");
 			System.out.println("Eyes (Regions: " + RegionEnum.LEFT_EYE + ", " + RegionEnum.RIGHT_EYE + "):");
 			System.out.println("* null (= don't draw this region)");
