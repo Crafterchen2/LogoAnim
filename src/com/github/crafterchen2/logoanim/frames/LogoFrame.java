@@ -25,7 +25,7 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	private boolean shouldBlink = false;
 	
-	private Thread blinkThread = null;
+	private final Timer blinkTimer; 
 	//} Fields
 	
 	//Constructor {
@@ -45,6 +45,18 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 		addMouseWheelListener(mouseAdapter);
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
+		blinkTimer = new Timer(5000, _ -> {
+			display.blink = true;
+			repaint();
+			Timer minor = new Timer(300, _ -> {
+				display.blink = false;
+				repaint();
+			});
+			minor.setRepeats(false);
+			minor.start();
+		});
+		blinkTimer.setRepeats(true);
+		blinkTimer.stop();
 		setVisible(true);
 	}
 	//} Constructor
@@ -150,41 +162,10 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	public void setShouldBlink(boolean shouldBlink){
 		this.shouldBlink = shouldBlink;
 		blinkBox.setSelected(this.shouldBlink);
-		if (this.shouldBlink && blinkThread == null) {
-			blinkThread = new Thread("blinkThread"){
-				
-				private Timer major;
-				
-				@Override
-				public void run() {
-					major = new Timer(5000, _ -> {
-						display.blink = true;
-						repaint();
-						Timer minor = new Timer(300, _ -> {
-							display.blink = false;
-							repaint();
-						});
-						minor.setRepeats(false);
-						minor.start();
-					});
-					major.setRepeats(true);
-					major.start();
-				}
-				
-				@Override
-				public void interrupt() {
-					major.stop();
-					major = null;
-					System.gc();
-					super.interrupt();
-				}
-			};
-			blinkThread.start();
+		if (this.shouldBlink) {
+			blinkTimer.start();
 		} else {
-			if (blinkThread != null) {
-				blinkThread.interrupt();
-				blinkThread = null;
-			}
+			blinkTimer.stop();
 			display.blink = false;
 			repaint();
 		}
@@ -198,7 +179,7 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	//Overrides {
 	public boolean getShouldBlink(){
-		return shouldBlink && blinkThread != null;
+		return shouldBlink;
 	}
 	
 	@Override
