@@ -102,6 +102,7 @@ public class Main {
 		l.setMood(RegionEnum.SMILE, smileMood);
 		l.setMood(RegionEnum.DECO, decoMood);
 		l.repaint();
+		l.setShouldBlink(true);
 		if (arrContains(args, "-c", "--controller")) new LogoControlFrame(l);
 		if (arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}

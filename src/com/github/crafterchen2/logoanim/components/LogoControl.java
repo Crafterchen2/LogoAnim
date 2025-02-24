@@ -17,6 +17,7 @@ public class LogoControl extends JPanel {
 	private final ImageSelector smileSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.SMILE), 2, RegionEnum.SMILE);
 	private final ImageSelector decoSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
 	private final MoodSelector moodSelector = new MoodSelector();
+	private final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	private LogoFrame logo;
 	private boolean hasLogo;
 	private final JButton repaintButton = new JButton("Repaint");
@@ -41,6 +42,7 @@ public class LogoControl extends JPanel {
 			if (!hasLogo) return;
 			l.setScale(slider.getValue());
 		});
+		blinkBox.addActionListener(_ -> repaintLogo(true));
 		repaintButton.addActionListener(_ -> repaintLogo(true));
 		ImageSelector.Listener imgListener = () -> repaintLogo(true);
 		leftSelector.addImageChangedListener(imgListener);
@@ -72,7 +74,10 @@ public class LogoControl extends JPanel {
 		add(p, BorderLayout.CENTER);
 		add(moodSelector, BorderLayout.NORTH);
 		add(slider, BorderLayout.WEST);
-		add(repaintButton, BorderLayout.SOUTH);
+		JPanel s = new JPanel(new BorderLayout());
+		s.add(repaintButton, BorderLayout.CENTER);
+		s.add(blinkBox, BorderLayout.WEST);
+		add(s, BorderLayout.SOUTH);
 		repaintLogo(true);
 	}
 	//} Constructor
@@ -96,6 +101,9 @@ public class LogoControl extends JPanel {
 			l.setMood(RegionEnum.RIGHT_EYE, moodSelector.getMood(RegionEnum.RIGHT_EYE));
 			l.setMood(RegionEnum.SMILE, moodSelector.getMood(RegionEnum.SMILE));
 			l.setMood(RegionEnum.DECO, moodSelector.getMood(RegionEnum.DECO));
+			if (blinkBox.isSelected() != l.getShouldBlink()) {
+				l.setShouldBlink(blinkBox.isSelected());
+			}
 		}
 		l.repaint();
 	}
@@ -127,12 +135,14 @@ public class LogoControl extends JPanel {
 		decoSelector.setSelected(0);
 		decoSelector.setMood(null);
 		if (hasLogo) {
+			blinkBox.setSelected(this.logo.getShouldBlink());
 			moodSelector.setMood(RegionEnum.LEFT_EYE, this.logo.getMood(RegionEnum.LEFT_EYE));
 			moodSelector.setMood(RegionEnum.RIGHT_EYE, this.logo.getMood(RegionEnum.RIGHT_EYE));
 			moodSelector.setMood(RegionEnum.SMILE, this.logo.getMood(RegionEnum.SMILE));
 			moodSelector.setMood(RegionEnum.DECO, this.logo.getMood(RegionEnum.DECO));
 			slider.setValue(this.logo.getScale());
 		} else {
+			blinkBox.setSelected(true);
 			moodSelector.setMood(RegionEnum.LEFT_EYE, MoodEnum.NORMAL);
 			moodSelector.setMood(RegionEnum.RIGHT_EYE, MoodEnum.NORMAL);
 			moodSelector.setMood(RegionEnum.SMILE, MoodEnum.NORMAL);

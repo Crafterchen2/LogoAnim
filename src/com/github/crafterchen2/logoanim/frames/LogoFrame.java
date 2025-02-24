@@ -19,8 +19,13 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	//Fields {
 	private final LogoDisplay display;
+	private final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	
 	private int scale = 20;
+	
+	private boolean shouldBlink = false;
+	
+	private Thread blinkThread = null;
 	//} Fields
 	
 	//Constructor {
@@ -65,6 +70,7 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
+					blinkBox.setSelected(getShouldBlink());
 					menu.getPopupMenu().show(me, e.getX(), e.getY());
 				} else {
 					repaint();
@@ -115,15 +121,21 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 		openLibrary.addActionListener(_ -> new PresetLibraryFrame(this));
 		JMenuItem copyToClipboard = new JMenuItem("Copy to Clipboard");
 		copyToClipboard.addActionListener(_ -> exportToClipboard());
+		blinkBox.addActionListener(_ -> {
+			if (blinkBox.isSelected() == getShouldBlink()) return;
+			setShouldBlink(blinkBox.isSelected());
+		});
 		menu.add(title);
 		menu.addSeparator();
-		menu.add(close);
-		menu.add(closeAll);
+		menu.add(blinkBox);
 		menu.addSeparator();
 		menu.add(openController);
 		menu.add(openLibrary);
 		menu.addSeparator();
 		menu.add(copyToClipboard);
+		menu.addSeparator();
+		menu.add(close);
+		menu.add(closeAll);
 		return menu;
 	}
 	//} Methods
@@ -135,6 +147,49 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	//} Getter
 	
 	//Setter {
+	public void setShouldBlink(boolean shouldBlink){
+		this.shouldBlink = shouldBlink;
+		blinkBox.setSelected(this.shouldBlink);
+		if (this.shouldBlink && blinkThread == null) {
+			blinkThread = new Thread("blinkThread"){
+				
+				private Timer major;
+				
+				@Override
+				public void run() {
+					major = new Timer(5000, _ -> {
+						display.blink = true;
+						repaint();
+						Timer minor = new Timer(300, _ -> {
+							display.blink = false;
+							repaint();
+						});
+						minor.setRepeats(false);
+						minor.start();
+					});
+					major.setRepeats(true);
+					major.start();
+				}
+				
+				@Override
+				public void interrupt() {
+					major.stop();
+					major = null;
+					System.gc();
+					super.interrupt();
+				}
+			};
+			blinkThread.start();
+		} else {
+			if (blinkThread != null) {
+				blinkThread.interrupt();
+				blinkThread = null;
+			}
+			display.blink = false;
+			repaint();
+		}
+	}
+	
 	public void setScale(int scale) {
 		this.scale = scale;
 		setSize(RegionEnum.base * scale, RegionEnum.base * scale);
@@ -142,6 +197,10 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	//} Setter
 	
 	//Overrides {
+	public boolean getShouldBlink(){
+		return shouldBlink && blinkThread != null;
+	}
+	
 	@Override
 	public MoodEnum getMood(RegionEnum reg) {
 		return display.getMood(reg);

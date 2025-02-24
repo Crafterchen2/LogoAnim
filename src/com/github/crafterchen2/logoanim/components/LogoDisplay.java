@@ -9,8 +9,10 @@ import java.util.HashMap;
 public class LogoDisplay extends JComponent implements AssetProvider, MoodProvider {
 	
 	//Fields {
-	HashMap<RegionEnum, AssetEnum> assets = HashMap.newHashMap(RegionEnum.values().length);
-	HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, AssetEnum> assets = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
+	
+	public boolean blink = false;
 	//} Fields
 	
 	//Constructor {
@@ -37,11 +39,13 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 		g.fillRect(0, 0, w, h);
 		RegionEnum[] regs = RegionEnum.values();
 		for (int i = regs.length - 1; i >= 0; i--) {
-			if (getAsset(regs[i]) != null) getAsset(regs[i]).paint(g, regs[i], getMood(regs[i]));
+			if (regs[i].type == AssetType.EYE && blink) continue;
+			AssetEnum asset = getAsset(regs[i]);
+			if (asset != null) asset.paint(g, regs[i], getMood(regs[i]));
 		}
 	}
 	
-	//Getter {	
+	//Getter {
 	@Override
 	public MoodEnum getMood(RegionEnum reg) {
 		return moods.get(reg);
