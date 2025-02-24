@@ -1,4 +1,4 @@
-package com.github.crafterchen2.logoanim;
+package com.github.crafterchen2.logoanim.frames;
 
 import com.github.crafterchen2.logoanim.components.LogoControl;
 

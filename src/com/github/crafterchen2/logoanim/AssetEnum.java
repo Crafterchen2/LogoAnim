@@ -24,13 +24,24 @@ public enum AssetEnum {
 	TRIANGLE_LEFT("triangle_left_eye", AssetType.EYE),
 	CROSS("cross_eye", AssetType.EYE),
 	PLUS("plus_eye", AssetType.EYE),
+	O("o_eye", AssetType.EYE),
 	UP("up_eye", AssetType.EYE),
+	RIGHT("right_eye", AssetType.EYE),
 	DOWN("down_eye", AssetType.EYE),
+	LEFT("left_eye", AssetType.EYE),
 	NEUTRAL("neutral_smile", AssetType.SMILE),
 	NORMAL("normal_smile", AssetType.SMILE),
+	HAPPY("very_happy_smile", AssetType.SMILE),
 	SAD("sad_smile", AssetType.SMILE),
+	VERY_SAD("very_sad_smile", AssetType.SMILE),
+	SMIRK("smirk_smile", AssetType.SMILE),
 	MULTI("multi_border_deco", AssetType.DECO),
 	SOLID("solid_border_deco", AssetType.DECO),
+	BLUSH("blush_deco", AssetType.DECO),
+	QUESTION("question_deco", AssetType.DECO),
+	EXCLAMATION("exclamation_deco", AssetType.DECO),
+	DOTS("3_dot_deco", AssetType.DECO),
+	ROBOT("robot_deco", AssetType.DECO),
 	;
 	
 	//Fields {
@@ -87,7 +98,15 @@ public enum AssetEnum {
 	public BufferedImage getImg() {
 		if (!cache.containsKey(this)) {
 			try {
-				cache.put(this, ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + getName() + ".png"))));
+				BufferedImage read = ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + getName() + ".png")));
+				if (read.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
+					BufferedImage img = new BufferedImage(read.getWidth(), read.getHeight(), BufferedImage.TYPE_INT_ARGB);
+					Graphics g = img.getGraphics();
+					g.drawImage(read,0,0,null);
+					g.dispose();
+					read = img;
+				}
+				cache.put(this, read);
 			} catch (IOException e) {
 				BufferedImage img = new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB);
 				Graphics g = img.getGraphics();

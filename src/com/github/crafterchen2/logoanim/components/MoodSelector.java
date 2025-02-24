@@ -1,6 +1,7 @@
 package com.github.crafterchen2.logoanim.components;
 
 import com.github.crafterchen2.logoanim.MoodEnum;
+import com.github.crafterchen2.logoanim.MoodProvider;
 import com.github.crafterchen2.logoanim.RegionEnum;
 
 import javax.swing.*;
@@ -12,7 +13,7 @@ import java.util.EventListener;
 import java.util.HashMap;
 
 //Classes {
-public class MoodSelector extends JComponent {
+public class MoodSelector extends JComponent implements MoodProvider {
 	
 	//Fields {
 	public final int outerMargin = 10;

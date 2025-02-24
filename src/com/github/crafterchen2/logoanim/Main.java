@@ -1,10 +1,10 @@
 package com.github.crafterchen2.logoanim;
 
-import com.github.crafterchen2.logoanim.components.LogoControl;
+import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
+import com.github.crafterchen2.logoanim.frames.LogoFrame;
+import com.github.crafterchen2.logoanim.frames.PresetLibraryFrame;
 
-import javax.swing.*;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 //Classes {
 public class Main {
@@ -66,7 +66,7 @@ public class Main {
 			}
 		}
 		if (defIndex < args.length) {
-			scale = parseInt(args[defIndex], parsed -> parsed >= RegionEnum.base && parsed <= RegionEnum.base * 8, "parsed must be between " + RegionEnum.base + " and " + RegionEnum.base * 8 + " (inclusive).");
+			scale = parseScale(args[defIndex]);
 			defIndex++;
 			if (defIndex < args.length - 3) {
 				leftEye = parseAsset(args[defIndex++], AssetType.EYE, leftEye);
@@ -79,31 +79,31 @@ public class Main {
 					smileMood = parseMood(args[defIndex++], smileMood);
 					decoMood = parseMood(args[defIndex++], decoMood);
 					if (defIndex < args.length) {
-						System.err.println("Too many arguments!");
+						System.err.println("Too many arguments.");
 						System.exit(1);
 					}
 				} else if (defIndex < args.length) {
-					System.err.println("Not enough default mood values found. Silently ignoring and not applying changes.");
+					System.err.println("Not enough default mood values found.");
+					System.exit(1);
 				}
 			} else if (defIndex < args.length) {
-				System.err.println("Not enough default asset values found. Silently ignoring and not applying changes.");
+				System.err.println("Not enough default asset values found.");
+				System.exit(1);
 			}
 		}
 		LogoFrame l = new LogoFrame();
 		l.setScale(scale);
-		l.leftEye = leftEye;
-		l.rightEye = rightEye;
-		l.smile = smile;
-		l.deco = deco;
-		l.leftEyeMood = leftEyeMood;
-		l.rightEyeMood = rightEyeMood;
-		l.smileMood = smileMood;
-		l.decoMood = decoMood;
+		l.setAsset(RegionEnum.LEFT_EYE, leftEye);
+		l.setAsset(RegionEnum.RIGHT_EYE, rightEye);
+		l.setAsset(RegionEnum.SMILE, smile);
+		l.setAsset(RegionEnum.DECO, deco);
+		l.setMood(RegionEnum.LEFT_EYE, leftEyeMood);
+		l.setMood(RegionEnum.RIGHT_EYE, rightEyeMood);
+		l.setMood(RegionEnum.SMILE, smileMood);
+		l.setMood(RegionEnum.DECO, decoMood);
 		l.repaint();
 		if (arrContains(args, "-c", "--controller")) new LogoControlFrame(l);
-		if (arrContains(args, "-p", "--presets")) {
-			
-		}
+		if (arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}
 	
 	private static MoodEnum parseMood(String string, MoodEnum def) {
@@ -112,14 +112,14 @@ public class Main {
 			if (string.contentEquals("keep")) return def;
 			return MoodEnum.valueOf(string);
 		} catch (Exception _) {
-			System.err.println(string + "is not a valid mood.");
+			System.err.println(string + " is not a valid mood.");
 			System.exit(1);
 			return null;
 		}
 	}
 	
 	private static AssetEnum parseAsset(String string, AssetType validType, AssetEnum def) {
-		final String errMsg = string + "is not a valid asset with type " + validType + ".";
+		final String errMsg = string + " is not a valid asset with type " + validType + ".";
 		try {
 			if (string == null || string.isBlank() || string.contentEquals("null")) return null;
 			if (string.contentEquals("keep")) return def;
@@ -133,10 +133,11 @@ public class Main {
 		}
 	}
 	
-	private static int parseInt(String string, Predicate<Integer> validCheck, String errMsg) {
+	private static int parseScale(String string) {
+		String errMsg = "scale must be an integer between 10 and 80 (inclusive).";
 		try {
 			int parsed = Integer.parseInt(string);
-			if (!validCheck.test(parsed)) throw new IllegalArgumentException(errMsg);
+			if (parsed < RegionEnum.base || parsed > RegionEnum.base * 8) throw new IllegalArgumentException(errMsg);
 			return parsed;
 		} catch (Exception _) {
 			System.err.println(errMsg);

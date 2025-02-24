@@ -13,6 +13,10 @@ import java.util.EventListener;
 import java.util.Objects;
 
 //Classes {
+/* IMPROVEME: This needs to be rewritten as this is janky.
+ * + public void setSelected(AssetEnum)
+ * - public void setSelected(int)
+ */
 public class ImageSelector extends JComponent {
 	
 	//Fields {
@@ -42,6 +46,7 @@ public class ImageSelector extends JComponent {
 		if (allowEmpty) {
 			JToggleButton button = new JToggleButton("", true);
 			button.setBackground(new Color(0, 0, 0));
+			button.setToolTipText("<nothing>");
 			button.addActionListener(_ -> signalUpdate());
 			add(button);
 			group.add(button);
@@ -49,6 +54,7 @@ public class ImageSelector extends JComponent {
 		for (int i = 0; i < arr.length; i++) {
 			buttons[i] = new JToggleButton(getIcon(arr[i]));
 			buttons[i].setBackground(new Color(0, 0, 0));
+			buttons[i].setToolTipText(arr[i].toString());
 			buttons[i].addActionListener(_ -> signalUpdate());
 			add(buttons[i]);
 			group.add(buttons[i]);
