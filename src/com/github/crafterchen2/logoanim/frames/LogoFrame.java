@@ -3,6 +3,7 @@ package com.github.crafterchen2.logoanim.frames;
 import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.LogoDisplay;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -13,6 +14,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 
 //Classes {
 public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
@@ -57,11 +60,19 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 		});
 		blinkTimer.setRepeats(true);
 		blinkTimer.stop();
+		loadFrameIcon(this, "logo_frame_icon");
 		setVisible(true);
 	}
 	//} Constructor
 	
 	//Methods {
+	public static void loadFrameIcon(JFrame frame, String name) {
+		try {
+			BufferedImage read = ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + name + ".png")));
+			frame.setIconImage(read);
+		} catch (IOException ignored) {}
+	}
+	
 	private MouseAdapter makeMouseAdapter() {
 		LogoFrame me = this;
 		return new MouseAdapter() {

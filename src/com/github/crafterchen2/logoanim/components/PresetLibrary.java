@@ -62,7 +62,6 @@ public class PresetLibrary extends JComponent {
 				updateSizes(width);
 				calcPrefSize(width);
 				scrollPane.validate();
-				System.out.println("called");
 			}
 		});
 		add(slider, BorderLayout.NORTH);

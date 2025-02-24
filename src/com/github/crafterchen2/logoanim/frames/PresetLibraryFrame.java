@@ -13,6 +13,7 @@ public class PresetLibraryFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(new PresetLibrary(logo));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		LogoFrame.loadFrameIcon(this, "preset_frame_icon");
 		setVisible(true);
 	}
 	
