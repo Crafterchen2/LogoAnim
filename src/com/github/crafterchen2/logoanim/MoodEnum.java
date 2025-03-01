@@ -10,6 +10,7 @@ public enum MoodEnum {
 	MAD(new Color(255, 0, 0)),
 	GOOD(new Color(0, 255, 0)),
 	STUNNED(new Color(170, 170, 170)),
+	STAR(new Color(255, 251, 68)),
 	;
 	
 	//Fields {

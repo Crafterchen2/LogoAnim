@@ -5,22 +5,20 @@ import com.github.crafterchen2.logoanim.frames.LogoFrame;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
 
 //Classes {
 public class LogoControl extends JPanel {
 	
 	//Fields {
 	private final JSlider slider = new JSlider(RegionEnum.base, RegionEnum.base * 8);
-	private final ImageSelector leftSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.LEFT_EYE);
-	private final ImageSelector rightSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.EYE), 3, RegionEnum.RIGHT_EYE);
-	private final ImageSelector smileSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.SMILE), 2, RegionEnum.SMILE);
-	private final ImageSelector decoSelector = new ImageSelector(filterArray(AssetEnum.values(), AssetType.DECO), 1, RegionEnum.DECO);
 	private final MoodSelector moodSelector = new MoodSelector();
+	private final AssetSelector assetSelector = new AssetSelector(moodSelector);
 	private final JCheckBox blinkBox = new JCheckBox("Enable blinking");
+	private final JButton repaintButton = new JButton("Repaint");
+	private final JButton updateButton = new JButton("Update config");
 	private LogoFrame logo;
 	private boolean hasLogo;
-	private final JButton repaintButton = new JButton("Repaint");
+	private boolean ignoreListener = false;
 	//} Fields
 	
 	//Constructor {
@@ -38,79 +36,81 @@ public class LogoControl extends JPanel {
 		slider.setPaintLabels(true);
 		slider.setOrientation(JSlider.VERTICAL);
 		slider.addChangeListener(_ -> {
+			if (ignoreListener) return;
 			LogoFrame l = getLogo();
 			if (!hasLogo) return;
 			l.setScale(slider.getValue());
 		});
-		blinkBox.addActionListener(_ -> repaintLogo(true));
-		repaintButton.addActionListener(_ -> repaintLogo(true));
-		ImageSelector.Listener imgListener = () -> repaintLogo(true);
-		leftSelector.addImageChangedListener(imgListener);
-		rightSelector.addImageChangedListener(imgListener);
-		smileSelector.addImageChangedListener(imgListener);
-		decoSelector.addImageChangedListener(imgListener);
 		moodSelector.addMoodChangedListener(() -> {
+			if (ignoreListener) return;
 			MoodProvider l = getLogo();
 			if (!hasLogo) return;
-			MoodEnum mood = moodSelector.getMood(RegionEnum.LEFT_EYE);
-			l.setMood(RegionEnum.LEFT_EYE, mood);
-			leftSelector.setMood(mood);
-			mood = moodSelector.getMood(RegionEnum.RIGHT_EYE);
-			l.setMood(RegionEnum.RIGHT_EYE, mood);
-			rightSelector.setMood(mood);
-			mood = moodSelector.getMood(RegionEnum.SMILE);
-			l.setMood(RegionEnum.SMILE, mood);
-			smileSelector.setMood(mood);
-			mood = moodSelector.getMood(RegionEnum.DECO);
-			l.setMood(RegionEnum.DECO, mood);
-			decoSelector.setMood(mood);
+			for (RegionEnum reg : RegionEnum.values()) {
+				l.setMood(reg, moodSelector.getMood(reg));
+			}
+			assetSelector.repaint();
 			repaintLogo(false);
 		});
-		JPanel p = new JPanel(new GridLayout(2, 2));
-		p.add(leftSelector);
-		p.add(rightSelector);
-		p.add(smileSelector);
-		p.add(decoSelector);
-		add(p, BorderLayout.CENTER);
-		add(moodSelector, BorderLayout.NORTH);
+		assetSelector.addAssetChangedListener(() -> {
+			if (ignoreListener) return;
+			AssetProvider l = getLogo();
+			if (!hasLogo) return;
+			for (RegionEnum reg : RegionEnum.values()) {
+				l.setAsset(reg, assetSelector.getAsset(reg));
+			}
+			repaintLogo(false);
+		});
+		blinkBox.addActionListener(_ -> {
+			if (ignoreListener) return;
+			repaintLogo(true);
+		});
+		repaintButton.addActionListener(_ -> {
+			if (ignoreListener) return;
+			repaintLogo(true);
+		});
+		updateButton.addActionListener(_ -> {
+			if (ignoreListener) return;
+			ignoreListener = true;
+			LogoFrame l = getLogo();
+			if (hasLogo) {
+				slider.setValue(l.getScale());
+				for (RegionEnum reg : RegionEnum.values()) {
+					moodSelector.setMood(reg, l.getMood(reg));
+					assetSelector.setAsset(reg, l.getAsset(reg));
+				}
+				blinkBox.setSelected(l.getShouldBlink());
+			}
+			ignoreListener = false;
+		});
 		add(slider, BorderLayout.WEST);
+		add(moodSelector, BorderLayout.NORTH);
+		add(assetSelector, BorderLayout.CENTER);
 		JPanel s = new JPanel(new BorderLayout());
-		s.add(repaintButton, BorderLayout.CENTER);
 		s.add(blinkBox, BorderLayout.WEST);
+		s.add(repaintButton, BorderLayout.CENTER);
+		s.add(updateButton, BorderLayout.EAST);
 		add(s, BorderLayout.SOUTH);
 		repaintLogo(true);
 	}
 	//} Constructor
 	
 	//Methods {
-	
-	private static AssetEnum[] filterArray(AssetEnum[] src, AssetType filter) {
-		return Arrays.stream(src).filter(assetEnum -> assetEnum.getType() == filter).toList().toArray(new AssetEnum[0]);
-	}
-	
 	private void repaintLogo(boolean query) {
 		LogoFrame l = getLogo();
 		if (!hasLogo) return;
 		if (query) {
 			l.setScale(slider.getValue());
-			l.setAsset(RegionEnum.LEFT_EYE, leftSelector.getSelected());
-			l.setAsset(RegionEnum.RIGHT_EYE, rightSelector.getSelected());
-			l.setAsset(RegionEnum.SMILE, smileSelector.getSelected());
-			l.setAsset(RegionEnum.DECO, decoSelector.getSelected());
-			l.setMood(RegionEnum.LEFT_EYE, moodSelector.getMood(RegionEnum.LEFT_EYE));
-			l.setMood(RegionEnum.RIGHT_EYE, moodSelector.getMood(RegionEnum.RIGHT_EYE));
-			l.setMood(RegionEnum.SMILE, moodSelector.getMood(RegionEnum.SMILE));
-			l.setMood(RegionEnum.DECO, moodSelector.getMood(RegionEnum.DECO));
-			if (blinkBox.isSelected() != l.getShouldBlink()) {
-				l.setShouldBlink(blinkBox.isSelected());
+			for (RegionEnum reg : RegionEnum.values()) {
+				l.setMood(reg, moodSelector.getMood(reg));
+				l.setAsset(reg, assetSelector.getAsset(reg));
 			}
+			l.setShouldBlink(blinkBox.isSelected());
 		}
 		l.repaint();
 	}
 	//} Methods
 	
 	//Getter {
-	
 	/**
 	 * Returns the current logo enables / disables the components accordingly.
 	 * It is highly recommended to check the value of {@code hasLogo} before proceeding,
@@ -128,26 +128,24 @@ public class LogoControl extends JPanel {
 	public void setLogo(LogoFrame logo) {
 		this.logo = logo;
 		getLogo();
-		//FEAT: Apply default assets according to current config of logo
-		leftSelector.setSelected(4);
-		rightSelector.setSelected(4);
-		smileSelector.setSelected(2);
-		decoSelector.setSelected(0);
-		decoSelector.setMood(null);
 		if (hasLogo) {
-			blinkBox.setSelected(this.logo.getShouldBlink());
-			moodSelector.setMood(RegionEnum.LEFT_EYE, this.logo.getMood(RegionEnum.LEFT_EYE));
-			moodSelector.setMood(RegionEnum.RIGHT_EYE, this.logo.getMood(RegionEnum.RIGHT_EYE));
-			moodSelector.setMood(RegionEnum.SMILE, this.logo.getMood(RegionEnum.SMILE));
-			moodSelector.setMood(RegionEnum.DECO, this.logo.getMood(RegionEnum.DECO));
 			slider.setValue(this.logo.getScale());
+			for (RegionEnum reg : RegionEnum.values()) {
+				moodSelector.setMood(reg, this.logo.getMood(reg));
+				assetSelector.setAsset(reg, this.logo.getAsset(reg));
+			}
+			blinkBox.setSelected(this.logo.getShouldBlink());
 		} else {
-			blinkBox.setSelected(true);
+			slider.setValue(RegionEnum.base);
 			moodSelector.setMood(RegionEnum.LEFT_EYE, MoodEnum.NORMAL);
 			moodSelector.setMood(RegionEnum.RIGHT_EYE, MoodEnum.NORMAL);
 			moodSelector.setMood(RegionEnum.SMILE, MoodEnum.NORMAL);
 			moodSelector.setMood(RegionEnum.DECO, null);
-			slider.setValue(RegionEnum.base);
+			assetSelector.setAsset(RegionEnum.LEFT_EYE, AssetEnum.EYE_2X2);
+			assetSelector.setAsset(RegionEnum.RIGHT_EYE, AssetEnum.EYE_2X2);
+			assetSelector.setAsset(RegionEnum.SMILE, AssetEnum.NORMAL);
+			assetSelector.setAsset(RegionEnum.DECO, null);
+			blinkBox.setSelected(true);
 		}
 	}
 	//} Setter
@@ -157,13 +155,12 @@ public class LogoControl extends JPanel {
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
-		moodSelector.setEnabled(enabled);
 		slider.setEnabled(enabled);
-		leftSelector.setEnabled(enabled);
-		rightSelector.setEnabled(enabled);
-		smileSelector.setEnabled(enabled);
-		decoSelector.setEnabled(enabled);
+		moodSelector.setEnabled(enabled);
+		assetSelector.setEnabled(enabled);
+		blinkBox.setEnabled(enabled);
 		repaintButton.setEnabled(enabled);
+		updateButton.setEnabled(enabled);
 	}
 }
 //} Classes

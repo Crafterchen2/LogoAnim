@@ -1,5 +1,6 @@
 package com.github.crafterchen2.logoanim;
 
+import com.github.crafterchen2.logoanim.components.AssetSelector;
 import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
 import com.github.crafterchen2.logoanim.frames.LogoFrame;
 import com.github.crafterchen2.logoanim.frames.PresetLibraryFrame;

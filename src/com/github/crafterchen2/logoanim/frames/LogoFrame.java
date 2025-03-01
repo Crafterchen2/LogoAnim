@@ -171,6 +171,7 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	//Setter {
 	public void setShouldBlink(boolean shouldBlink){
+		if (this.shouldBlink == shouldBlink && blinkTimer.isRunning() == shouldBlink) return;
 		this.shouldBlink = shouldBlink;
 		blinkBox.setSelected(this.shouldBlink);
 		if (this.shouldBlink) {
