@@ -1,4 +1,7 @@
+import com.github.crafterchen2.logoanim.AssetProvider;
+import com.github.crafterchen2.logoanim.ImmutableAssetProvider;
 import com.github.crafterchen2.logoanim.MoodProvider;
+import com.github.crafterchen2.logoanim.Parser;
 import com.github.crafterchen2.logoanim.components.AssetSelector;
 import com.github.crafterchen2.logoanim.components.MoodSelector;
 import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
@@ -8,7 +11,7 @@ import javax.swing.*;
 public class Tests {
 	
 	public static void main(String[] args) {
-		new LogoControlFrame(null);
+		
 	}
 	
 	private static void assetSelectorTestFrame() {

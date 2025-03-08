@@ -3,19 +3,22 @@ package com.github.crafterchen2.logoanim;
 import java.util.HashMap;
 
 //Interfaces {
-public interface AssetProvider {
+public interface AssetProvider extends ImmutableAssetProvider {
 	//Methods {
 	void setAsset(RegionEnum reg, AssetEnum asset);
 	
-	AssetEnum getAsset(RegionEnum reg);
-	
+	@Override
 	default AssetProvider getAsset() {
-		return new Default(getAsset(RegionEnum.LEFT_EYE), getAsset(RegionEnum.RIGHT_EYE), getAsset(RegionEnum.SMILE), getAsset(RegionEnum.DECO));
+		return new Default(
+				getAsset(RegionEnum.LEFT_EYE), 
+				getAsset(RegionEnum.RIGHT_EYE), 
+				getAsset(RegionEnum.SMILE), 
+				getAsset(RegionEnum.DECO));
 	}
 	//} Methods
 	
 	//Setter {
-	default void setAsset(AssetProvider assets) {
+	default void setAsset(ImmutableAssetProvider assets) {
 		if (assets == null) return;
 		for (RegionEnum reg : RegionEnum.values()) {
 			setAsset(reg, assets.getAsset(reg));
@@ -24,11 +27,7 @@ public interface AssetProvider {
 	//} Setter
 	
 	//Classes {
-	class Default implements AssetProvider {
-		
-		//Fields {
-		private final HashMap<RegionEnum, AssetEnum> assets = HashMap.newHashMap(RegionEnum.values().length);
-		//} Fields
+	class Default extends ImmutableAssetProvider.Default implements AssetProvider {
 		
 		//Constructor {
 		public Default() {
@@ -36,22 +35,23 @@ public interface AssetProvider {
 		}
 		
 		public Default(AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco) {
+			super(HashMap.newHashMap(RegionEnum.values().length));
 			setAsset(RegionEnum.LEFT_EYE, leftEye);
 			setAsset(RegionEnum.RIGHT_EYE, rightEye);
 			setAsset(RegionEnum.SMILE, smile);
 			setAsset(RegionEnum.DECO, deco);
+		}
+		
+		public Default(ImmutableAssetProvider assetProvider) {
+			super(HashMap.newHashMap(RegionEnum.values().length));
+			setAsset(assetProvider);
 		}
 		//} Constructor
 		
 		//Overrides {
 		@Override
 		public void setAsset(RegionEnum reg, AssetEnum asset) {
-			assets.put(reg, asset);
-		}
-		
-		@Override
-		public AssetEnum getAsset(RegionEnum reg) {
-			return assets.get(reg);
+			map.put(reg, asset);
 		}
 		//} Overrides
 	}

@@ -1,19 +1,16 @@
 package com.github.crafterchen2.logoanim;
 
-import com.github.crafterchen2.logoanim.components.AssetSelector;
 import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
 import com.github.crafterchen2.logoanim.frames.LogoFrame;
 import com.github.crafterchen2.logoanim.frames.PresetLibraryFrame;
-
-import java.util.Objects;
 
 //Classes {
 public class Main {
 	
 	//Methods {
 	public static void main(String[] args) {
-		boolean help = arrContains(args, "-h", "-?", "--help", "help");
-		boolean list = arrContains(args, "-l", "--list");
+		boolean help = Parser.arrContains(args, "-h", "-?", "--help", "help");
+		boolean list = Parser.arrContains(args, "-l", "--list");
 		if (help) {
 			System.out.println("Tool to create an interactive Crafterchen2 logo.");
 			System.out.println("Usage: [OPTIONS] [scale [leftEye rightEye smile deco [leftEyeMood rightEyeMood smileMood decoMood]]]");
@@ -67,18 +64,18 @@ public class Main {
 			}
 		}
 		if (defIndex < args.length) {
-			scale = parseScale(args[defIndex]);
+			scale = Parser.parseScale(args[defIndex]);
 			defIndex++;
 			if (defIndex < args.length - 3) {
-				leftEye = parseAsset(args[defIndex++], AssetType.EYE, leftEye);
-				rightEye = parseAsset(args[defIndex++], AssetType.EYE, rightEye);
-				smile = parseAsset(args[defIndex++], AssetType.SMILE, smile);
-				deco = parseAsset(args[defIndex++], AssetType.DECO, deco);
+				leftEye = Parser.parseAsset(args[defIndex++], AssetType.EYE, leftEye);
+				rightEye = Parser.parseAsset(args[defIndex++], AssetType.EYE, rightEye);
+				smile = Parser.parseAsset(args[defIndex++], AssetType.SMILE, smile);
+				deco = Parser.parseAsset(args[defIndex++], AssetType.DECO, deco);
 				if (defIndex < args.length - 3) {
-					leftEyeMood = parseMood(args[defIndex++], leftEyeMood);
-					rightEyeMood = parseMood(args[defIndex++], rightEyeMood);
-					smileMood = parseMood(args[defIndex++], smileMood);
-					decoMood = parseMood(args[defIndex++], decoMood);
+					leftEyeMood = Parser.parseMood(args[defIndex++], leftEyeMood);
+					rightEyeMood = Parser.parseMood(args[defIndex++], rightEyeMood);
+					smileMood = Parser.parseMood(args[defIndex++], smileMood);
+					decoMood = Parser.parseMood(args[defIndex++], decoMood);
 					if (defIndex < args.length) {
 						System.err.println("Too many arguments.");
 						System.exit(1);
@@ -104,59 +101,8 @@ public class Main {
 		l.setMood(RegionEnum.DECO, decoMood);
 		l.repaint();
 		l.setShouldBlink(true);
-		if (arrContains(args, "-c", "--controller")) new LogoControlFrame(l);
-		if (arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
-	}
-	
-	private static MoodEnum parseMood(String string, MoodEnum def) {
-		try {
-			if (string == null || string.isBlank() || string.contentEquals("null")) return null;
-			if (string.contentEquals("keep")) return def;
-			return MoodEnum.valueOf(string);
-		} catch (Exception _) {
-			System.err.println(string + " is not a valid mood.");
-			System.exit(1);
-			return null;
-		}
-	}
-	
-	private static AssetEnum parseAsset(String string, AssetType validType, AssetEnum def) {
-		final String errMsg = string + " is not a valid asset with type " + validType + ".";
-		try {
-			if (string == null || string.isBlank() || string.contentEquals("null")) return null;
-			if (string.contentEquals("keep")) return def;
-			AssetEnum parsed = AssetEnum.valueOf(string);
-			if (parsed.getType() != validType) throw new IllegalArgumentException(errMsg);
-			return parsed;
-		} catch (Exception _) {
-			System.err.println(errMsg);
-			System.exit(1);
-			return null;
-		}
-	}
-	
-	private static int parseScale(String string) {
-		String errMsg = "scale must be an integer between 10 and 80 (inclusive).";
-		try {
-			int parsed = Integer.parseInt(string);
-			if (parsed < RegionEnum.base || parsed > RegionEnum.base * 8) throw new IllegalArgumentException(errMsg);
-			return parsed;
-		} catch (Exception _) {
-			System.err.println(errMsg);
-			System.exit(1);
-			return Integer.MIN_VALUE;
-		}
-	}
-	
-	@SafeVarargs
-	public static <T> boolean arrContains(T[] arr, T... toFind) {
-		if (arr == null || toFind == null) return false;
-		for (T t : arr) {
-			for (T f : toFind) {
-				if (Objects.equals(t, f)) return true;
-			}
-		}
-		return false;
+		if (Parser.arrContains(args, "-c", "--controller")) new LogoControlFrame(l);
+		if (Parser.arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}
 	//} Methods
 	
