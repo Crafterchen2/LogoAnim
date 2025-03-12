@@ -4,14 +4,45 @@ import java.util.Objects;
 
 public class Parser {
 	
+	public static final String KEEP = "keep";
+	public static final String NULL = "null";
+	public static final String CSV_KEY = "leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood";
+	public static final String CSV_FULL_KEY = "scale, blink, " + CSV_KEY;
+	public static final FullLogoConfig DEFAULT = new FullLogoConfig(20, true,
+			new ImmutableAssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.NORMAL, null),
+			new ImmutableMoodProvider.Default(MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, null));
+	
 	public Parser() {
 		
 	}
 	
+	private static FullLogoConfig parseFullLogo(String entry) {
+		String[] arr = entry.split(", ", 3);
+		RegionEnum[] regs = RegionEnum.values();
+		int scale = parseScale(arr[0], DEFAULT.scale);
+		boolean blink = parseBlink(arr[1], DEFAULT.blink);
+		return new FullLogoConfig(scale, blink, parseLogo(arr[2]));
+	}
+	
+	private static LogoConfig parseLogo(String entry) {
+		String[] arr = entry.split(", ");
+		int iArr = 0;
+		RegionEnum[] regs = RegionEnum.values();
+		AssetProvider assets = new AssetProvider.Default();
+		MoodProvider moods = new MoodProvider.Default();
+		for (RegionEnum reg : regs) {
+			assets.setAsset(reg, parseAsset(arr[iArr++], reg.type, DEFAULT.getAsset(reg)));
+		}
+		for (RegionEnum reg : regs) {
+			moods.setMood(reg, parseMood(arr[iArr++], DEFAULT.getMood(reg)));
+		}
+		return new LogoConfig(new ImmutableAssetProvider.Default(assets), new ImmutableMoodProvider.Default(moods));
+	}
+	
 	public static MoodEnum parseMood(String string, MoodEnum def) {
 		try {
-			if (string == null || string.isBlank() || string.contentEquals("null")) return null;
-			if (string.contentEquals("keep")) return def;
+			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
+			if (string.contentEquals(KEEP)) return def;
 			return MoodEnum.valueOf(string);
 		} catch (Exception _) {
 			System.err.println(string + " is not a valid mood.");
@@ -21,30 +52,43 @@ public class Parser {
 	}
 	
 	public static AssetEnum parseAsset(String string, AssetType validType, AssetEnum def) {
-		final String errMsg = string + " is not a valid asset with type " + validType + ".";
+		IllegalArgumentException exc = new IllegalArgumentException(string + " is not a valid asset with type " + validType + ".");
 		try {
-			if (string == null || string.isBlank() || string.contentEquals("null")) return null;
-			if (string.contentEquals("keep")) return def;
+			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
+			if (string.contentEquals(KEEP)) return def;
 			AssetEnum parsed = AssetEnum.valueOf(string);
-			if (parsed.getType() != validType) throw new IllegalArgumentException(errMsg);
+			if (parsed.getType() != validType) {
+				throw exc;
+			}
 			return parsed;
 		} catch (Exception _) {
-			System.err.println(errMsg);
-			System.exit(1);
-			return null;
+			throw exc;
 		}
 	}
 	
-	public static int parseScale(String string) {
-		String errMsg = "scale must be an integer between 10 and 80 (inclusive).";
+	public static int parseScale(String string, int def) {
+		if (string.contentEquals(KEEP)) return def;
+		IllegalArgumentException exc = new IllegalArgumentException("scale must be an integer between 10 and 80 (inclusive).");
 		try {
 			int parsed = Integer.parseInt(string);
-			if (parsed < RegionEnum.base || parsed > RegionEnum.base * 8) throw new IllegalArgumentException(errMsg);
+			if (parsed < RegionEnum.base || parsed > RegionEnum.base * 8) {
+				throw exc;
+			}
 			return parsed;
 		} catch (Exception _) {
-			System.err.println(errMsg);
-			System.exit(1);
-			return Integer.MIN_VALUE;
+			throw exc;
+		}
+	}
+	
+	public static boolean parseBlink(String string, boolean def) {
+		if (string.contentEquals(KEEP)) return def;
+		IllegalArgumentException exc = new IllegalArgumentException("blink must be either true or false.");
+		try {
+			if (string.contentEquals("true")) return true;
+			if (string.contentEquals("false")) return false;
+			throw exc;
+		} catch (Exception _) {
+			throw exc;
 		}
 	}
 	
