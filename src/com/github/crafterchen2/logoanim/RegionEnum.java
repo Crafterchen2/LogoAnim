@@ -15,10 +15,10 @@ public enum RegionEnum {
 	public final double x, y, w, h;
 	
 	/**
-	 * The aspect ratio of the area.<br/>
-	 * ratio == 1.0 => Area is a square<br/>
-	 * ratio > 1.0 => Width > Height<br/>
-	 * ratio < 1.0 => Height > Width<br/>
+	 The aspect ratio of the area.<br/>
+	 ratio == 1.0 => Area is a square<br/>
+	 ratio > 1.0 => Width > Height<br/>
+	 ratio < 1.0 => Height > Width<br/>
 	 */
 	public final double ratio;
 	public final AssetType type;

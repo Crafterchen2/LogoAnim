@@ -3,21 +3,25 @@ package com.github.crafterchen2.logoanim.components;
 import com.github.crafterchen2.logoanim.RegionEnum;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
 import java.awt.*;
 
+//Classes {
 public abstract class Selector extends JComponent {
 	
+	//Fields {
 	public final int outerMargin = 10;
 	public final int innerMargin = 5;
 	public final int minSizeButtons = 75;
 	protected final Color disabledColor = new Color(192, 192, 192);
+	//} Fields
 	
+	//Constructor {
 	public Selector() {
 		setDoubleBuffered(true);
 	}
+	//} Constructor
 	
+	//Methods {
 	protected static void setEnabled(Container c, boolean enabled) {
 		for (Component component : c.getComponents()) {
 			component.setEnabled(enabled);
@@ -26,13 +30,17 @@ public abstract class Selector extends JComponent {
 			}
 		}
 	}
+	//} Methods
 	
+	//Overrides {
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		setEnabled(this, enabled);
 	}
+	//} Overrides
 	
+	//Classes {
 	protected static class SelectorButton<T> extends JButton {
 		
 		//Fields {
@@ -40,11 +48,15 @@ public abstract class Selector extends JComponent {
 		protected final T subject;
 		//} Fields
 		
+		//Constructor {
 		public SelectorButton(RegionEnum reg, T subject) {
 			this.reg = reg;
 			this.subject = subject;
 		}
+		//} Constructor
 		
-	} 
+	}
+	//} Classes
 	
 }
+//} Classes

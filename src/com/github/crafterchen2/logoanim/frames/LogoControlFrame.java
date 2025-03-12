@@ -5,8 +5,10 @@ import com.github.crafterchen2.logoanim.components.LogoControl;
 import javax.swing.*;
 import java.awt.*;
 
+//Classes {
 public class LogoControlFrame extends JFrame {
 	
+	//Constructor {
 	public LogoControlFrame(LogoFrame logo) throws HeadlessException {
 		super("Logo Controller");
 		LogoControl controller = new LogoControl(logo);
@@ -18,4 +20,6 @@ public class LogoControlFrame extends JFrame {
 		LogoFrame.loadFrameIcon(this, "control_frame_icon");
 		setVisible(true);
 	}
+	//} Constructor
 }
+//} Classes

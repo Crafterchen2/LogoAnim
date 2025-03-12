@@ -23,12 +23,9 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	//Fields {
 	private final LogoDisplay display;
 	private final JCheckBox blinkBox = new JCheckBox("Enable blinking");
-	
+	private final Timer blinkTimer;
 	private int scale = 20;
-	
 	private boolean shouldBlink = false;
-	
-	private final Timer blinkTimer; 
 	//} Fields
 	
 	//Constructor {
@@ -48,16 +45,20 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 		addMouseWheelListener(mouseAdapter);
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
-		blinkTimer = new Timer(5000, _ -> {
+		blinkTimer = new Timer(
+				5000, _ -> {
 			display.blink = true;
 			repaint();
-			Timer minor = new Timer(300, _ -> {
+			Timer minor = new Timer(
+					300, _ -> {
 				display.blink = false;
 				repaint();
-			});
+			}
+			);
 			minor.setRepeats(false);
 			minor.start();
-		});
+		}
+		);
 		blinkTimer.setRepeats(true);
 		blinkTimer.stop();
 		loadFrameIcon(this, "logo_frame_icon");
@@ -70,7 +71,8 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 		try {
 			BufferedImage read = ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + name + ".png")));
 			frame.setIconImage(read);
-		} catch (IOException ignored) {}
+		} catch (IOException ignored) {
+		}
 	}
 	
 	private MouseAdapter makeMouseAdapter() {
@@ -167,10 +169,14 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	public int getScale() {
 		return scale;
 	}
+	
+	public boolean getShouldBlink() {
+		return shouldBlink;
+	}
 	//} Getter
 	
 	//Setter {
-	public void setShouldBlink(boolean shouldBlink){
+	public void setShouldBlink(boolean shouldBlink) {
 		if (this.shouldBlink == shouldBlink && blinkTimer.isRunning() == shouldBlink) return;
 		this.shouldBlink = shouldBlink;
 		blinkBox.setSelected(this.shouldBlink);
@@ -190,10 +196,6 @@ public class LogoFrame extends JFrame implements AssetProvider, MoodProvider {
 	//} Setter
 	
 	//Overrides {
-	public boolean getShouldBlink(){
-		return shouldBlink;
-	}
-	
 	@Override
 	public MoodEnum getMood(RegionEnum reg) {
 		return display.getMood(reg);

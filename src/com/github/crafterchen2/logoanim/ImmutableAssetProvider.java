@@ -1,20 +1,29 @@
 package com.github.crafterchen2.logoanim;
 
-import java.util.*;
+import java.util.Map;
 
-public interface ImmutableAssetProvider extends Provider{
+//Interfaces {
+public interface ImmutableAssetProvider extends Provider {
 	
+	//Methods {
 	AssetEnum getAsset(RegionEnum reg);
+	//} Methods
+	
+	//Getter {
 	default ImmutableAssetProvider getAsset() {
 		return new Default(
 				getAsset(RegionEnum.LEFT_EYE),
 				getAsset(RegionEnum.RIGHT_EYE),
 				getAsset(RegionEnum.SMILE),
-				getAsset(RegionEnum.DECO));
+				getAsset(RegionEnum.DECO)
+		);
 	}
+	//} Getter
 	
+	//Classes {
 	class Default extends Provider.Default<AssetEnum> implements ImmutableAssetProvider {
 		
+		//Constructor {
 		public Default() {
 			super(null, null, null, null);
 		}
@@ -30,20 +39,28 @@ public interface ImmutableAssetProvider extends Provider{
 		public Default(ImmutableAssetProvider assetProvider) {
 			super(makeMap(assetProvider));
 		}
+		//} Constructor
 		
+		//Methods {
 		private static Map<RegionEnum, AssetEnum> makeMap(ImmutableAssetProvider prov) {
 			if (prov == null) return Map.of();
 			return makeMap(
 					prov.getAsset(RegionEnum.LEFT_EYE),
 					prov.getAsset(RegionEnum.RIGHT_EYE),
 					prov.getAsset(RegionEnum.SMILE),
-					prov.getAsset(RegionEnum.DECO));
+					prov.getAsset(RegionEnum.DECO)
+						  );
 		}
+		//} Methods
 		
+		//Overrides {
 		@Override
 		public AssetEnum getAsset(RegionEnum reg) {
 			return map.get(reg);
 		}
+		//} Overrides
 	}
+	//} Classes
 	
 }
+//} Interfaces

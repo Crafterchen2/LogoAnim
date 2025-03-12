@@ -6,15 +6,6 @@ import java.util.HashMap;
 public interface AssetProvider extends ImmutableAssetProvider {
 	//Methods {
 	void setAsset(RegionEnum reg, AssetEnum asset);
-	
-	@Override
-	default AssetProvider getAsset() {
-		return new Default(
-				getAsset(RegionEnum.LEFT_EYE), 
-				getAsset(RegionEnum.RIGHT_EYE), 
-				getAsset(RegionEnum.SMILE), 
-				getAsset(RegionEnum.DECO));
-	}
 	//} Methods
 	
 	//Setter {
@@ -25,6 +16,18 @@ public interface AssetProvider extends ImmutableAssetProvider {
 		}
 	}
 	//} Setter
+	
+	//Overrides {
+	@Override
+	default AssetProvider getAsset() {
+		return new Default(
+				getAsset(RegionEnum.LEFT_EYE),
+				getAsset(RegionEnum.RIGHT_EYE),
+				getAsset(RegionEnum.SMILE),
+				getAsset(RegionEnum.DECO)
+		);
+	}
+	//} Overrides
 	
 	//Classes {
 	class Default extends ImmutableAssetProvider.Default implements AssetProvider {

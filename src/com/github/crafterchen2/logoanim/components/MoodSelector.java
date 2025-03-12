@@ -61,6 +61,14 @@ public class MoodSelector extends Selector implements MoodProvider {
 		if (isEnabled()) listeners.forEach(Listener::moodChanged);
 	}
 	
+	private Color safeGetMoodColor(RegionEnum reg) {
+		if (!isEnabled()) return disabledColor;
+		MoodEnum mood = getMood(reg);
+		return (mood != null) ? mood.getColor() : new Color(0, 0, 0);
+	}
+	//} Methods
+	
+	//Overrides {
 	public void setMood(RegionEnum reg, MoodEnum mood) {
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
 		moods.put(reg, mood);
@@ -73,14 +81,6 @@ public class MoodSelector extends Selector implements MoodProvider {
 		return moods.get(reg);
 	}
 	
-	private Color safeGetMoodColor(RegionEnum reg) {
-		if (!isEnabled()) return disabledColor;
-		MoodEnum mood = getMood(reg);
-		return (mood != null) ? mood.getColor() : new Color(0, 0, 0);
-	}
-	//} Methods
-	
-	//Overrides {
 	@Override
 	protected void paintComponent(Graphics g) {
 		g.setColor(safeGetMoodColor(RegionEnum.DECO));
@@ -98,7 +98,7 @@ public class MoodSelector extends Selector implements MoodProvider {
 	
 	//Classes {
 	private class MoodButton extends SelectorButton<MoodEnum> {
-				
+		
 		//Constructor {
 		public MoodButton(RegionEnum reg, MoodEnum subject) {
 			super(reg, subject);

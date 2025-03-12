@@ -6,15 +6,6 @@ import java.util.HashMap;
 public interface MoodProvider extends ImmutableMoodProvider {
 	//Methods {
 	void setMood(RegionEnum reg, MoodEnum mood);
-	
-	@Override
-	default MoodProvider getMood() {
-		return new Default(
-				getMood(RegionEnum.LEFT_EYE), 
-				getMood(RegionEnum.RIGHT_EYE), 
-				getMood(RegionEnum.SMILE), 
-				getMood(RegionEnum.DECO));
-	}
 	//} Methods
 	
 	//Setter {
@@ -25,6 +16,18 @@ public interface MoodProvider extends ImmutableMoodProvider {
 		}
 	}
 	//} Setter
+	
+	//Overrides {
+	@Override
+	default MoodProvider getMood() {
+		return new Default(
+				getMood(RegionEnum.LEFT_EYE),
+				getMood(RegionEnum.RIGHT_EYE),
+				getMood(RegionEnum.SMILE),
+				getMood(RegionEnum.DECO)
+		);
+	}
+	//} Overrides
 	
 	//Classes {
 	class Default extends ImmutableMoodProvider.Default implements MoodProvider {

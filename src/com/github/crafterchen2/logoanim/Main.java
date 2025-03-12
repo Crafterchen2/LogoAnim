@@ -4,9 +4,7 @@ import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
 import com.github.crafterchen2.logoanim.frames.LogoFrame;
 import com.github.crafterchen2.logoanim.frames.PresetLibraryFrame;
 
-import static com.github.crafterchen2.logoanim.Parser.DEFAULT;
-import static com.github.crafterchen2.logoanim.Parser.KEEP;
-import static com.github.crafterchen2.logoanim.Parser.NULL;
+import static com.github.crafterchen2.logoanim.Parser.*;
 
 //Classes {
 public class Main {

@@ -2,20 +2,28 @@ package com.github.crafterchen2.logoanim;
 
 import java.util.Objects;
 
+//Classes {
 public class Parser {
 	
+	//Fields {
 	public static final String KEEP = "keep";
 	public static final String NULL = "null";
 	public static final String CSV_KEY = "leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood";
 	public static final String CSV_FULL_KEY = "scale, blink, " + CSV_KEY;
-	public static final FullLogoConfig DEFAULT = new FullLogoConfig(20, true,
+	public static final FullLogoConfig DEFAULT = new FullLogoConfig(
+			20, true,
 			new ImmutableAssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.NORMAL, null),
-			new ImmutableMoodProvider.Default(MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, null));
+			new ImmutableMoodProvider.Default(MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, null)
+	);
+	//} Fields
 	
+	//Constructor {
 	public Parser() {
 		
 	}
+	//} Constructor
 	
+	//Methods {
 	private static FullLogoConfig parseFullLogo(String entry) {
 		String[] arr = entry.split(", ", 3);
 		RegionEnum[] regs = RegionEnum.values();
@@ -102,4 +110,6 @@ public class Parser {
 		}
 		return false;
 	}
+	//} Methods
 }
+//} Classes

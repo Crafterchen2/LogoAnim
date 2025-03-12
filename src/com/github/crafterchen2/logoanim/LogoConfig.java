@@ -1,10 +1,14 @@
 package com.github.crafterchen2.logoanim;
 
+//Classes {
 public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider {
 	
+	//Fields {
 	final ImmutableAssetProvider asset;
 	final ImmutableMoodProvider mood;
+	//} Fields
 	
+	//Constructor {
 	public LogoConfig() {
 		this(null, null);
 	}
@@ -17,7 +21,9 @@ public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider
 	public LogoConfig(LogoConfig other) {
 		this((other != null) ? other.getAsset() : null, (other != null) ? other.getMood() : null);
 	}
+	//} Constructor
 	
+	//Overrides {
 	@Override
 	public AssetEnum getAsset(RegionEnum reg) {
 		return asset.getAsset(reg);
@@ -27,4 +33,6 @@ public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider
 	public MoodEnum getMood(RegionEnum reg) {
 		return mood.getMood(reg);
 	}
+	//} Overrides
 }
+//} Classes

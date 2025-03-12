@@ -111,11 +111,13 @@ public class LogoControl extends JPanel {
 	//} Methods
 	
 	//Getter {
+	
 	/**
-	 * Returns the current logo enables / disables the components accordingly.
-	 * It is highly recommended to check the value of {@code hasLogo} before proceeding,
-	 * as this method can return {@code null}.
-	 * @return The current logo or {@code null} if no logo is set.
+	 Returns the current logo enables / disables the components accordingly.
+	 It is highly recommended to check the value of {@code hasLogo} before proceeding,
+	 as this method can return {@code null}.
+	 
+	 @return The current logo or {@code null} if no logo is set.
 	 */
 	public LogoFrame getLogo() {
 		hasLogo = logo != null;
@@ -152,6 +154,7 @@ public class LogoControl extends JPanel {
 	
 	
 	
+	//Overrides {
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
@@ -162,5 +165,6 @@ public class LogoControl extends JPanel {
 		repaintButton.setEnabled(enabled);
 		updateButton.setEnabled(enabled);
 	}
+	//} Overrides
 }
 //} Classes

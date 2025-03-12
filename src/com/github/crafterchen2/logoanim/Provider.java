@@ -4,12 +4,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+//Interfaces {
 public interface Provider {
 	
+	//Classes {
 	abstract class Default<T> implements Provider {
 		
+		//Fields {
 		protected final Map<RegionEnum, T> map;
+		//} Fields
 		
+		//Constructor {
 		public Default() {
 			this(null, null, null, null);
 		}
@@ -21,7 +26,9 @@ public interface Provider {
 		public Default(T leftEye, T rightEye, T smile, T deco) {
 			this(makeMap(leftEye, rightEye, smile, deco));
 		}
+		//} Constructor
 		
+		//Methods {
 		protected static <T> Map<RegionEnum, T> makeMap(T leftEye, T rightEye, T smile, T deco) {
 			final HashMap<RegionEnum, T> demo = HashMap.newHashMap(RegionEnum.values().length);
 			if (leftEye != null) demo.put(RegionEnum.LEFT_EYE, leftEye);
@@ -49,7 +56,10 @@ public interface Provider {
 				default -> Map.ofEntries(e0, e1, e2, e3);
 			};
 		}
+		//} Methods
 		
 	}
+	//} Classes
 	
 }
+//} Interfaces

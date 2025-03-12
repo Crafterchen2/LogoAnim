@@ -5,8 +5,10 @@ import com.github.crafterchen2.logoanim.components.PresetLibrary;
 import javax.swing.*;
 import java.awt.*;
 
+//Classes {
 public class PresetLibraryFrame extends JFrame {
 	
+	//Constructor {
 	public PresetLibraryFrame(LogoFrame logo) throws HeadlessException {
 		super("Preset Library");
 		setSize(300, 600);
@@ -16,5 +18,7 @@ public class PresetLibraryFrame extends JFrame {
 		LogoFrame.loadFrameIcon(this, "preset_frame_icon");
 		setVisible(true);
 	}
+	//} Constructor
 	
 }
+//} Classes

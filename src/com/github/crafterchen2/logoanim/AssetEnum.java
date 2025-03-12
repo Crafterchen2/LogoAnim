@@ -102,7 +102,7 @@ public enum AssetEnum {
 				if (read.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
 					BufferedImage img = new BufferedImage(read.getWidth(), read.getHeight(), BufferedImage.TYPE_INT_ARGB);
 					Graphics g = img.getGraphics();
-					g.drawImage(read,0,0,null);
+					g.drawImage(read, 0, 0, null);
 					g.dispose();
 					read = img;
 				}
