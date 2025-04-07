@@ -4,8 +4,8 @@ package com.github.crafterchen2.logoanim;
 public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider {
 	
 	//Fields {
-	final ImmutableAssetProvider asset;
-	final ImmutableMoodProvider mood;
+	private final ImmutableAssetProvider asset;
+	private final ImmutableMoodProvider mood;
 	//} Fields
 	
 	//Constructor {
