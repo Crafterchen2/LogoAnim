@@ -1,8 +1,6 @@
 package com.github.crafterchen2.logoanim;
 
-import com.github.crafterchen2.logoanim.frames.LogoControlFrame;
-import com.github.crafterchen2.logoanim.frames.LogoFrame;
-import com.github.crafterchen2.logoanim.frames.PresetLibraryFrame;
+import com.github.crafterchen2.logoanim.frames.*;
 
 import static com.github.crafterchen2.logoanim.Parser.*;
 
@@ -34,7 +32,7 @@ public class Main {
 			}
 		}
 		if (defIndex < args.length) {
-			scale = Parser.parseScale(args[defIndex++], scale);
+			scale = Parser.parseScaleOrFullscreen(args[defIndex++], scale);
 			if (defIndex < args.length) {
 				blink = Parser.parseBlink(args[defIndex++], blink);
 				if (defIndex < args.length - 3) {
@@ -61,8 +59,15 @@ public class Main {
 				}
 			}
 		}
-		LogoFrame l = new LogoFrame();
-		l.setScale(scale);
+		final DisplayFrame l;
+		if (scale <= FULLSCREEN) {
+			final StreamFrame streamFrame = new StreamFrame();
+			streamFrame.setFullscreen(scale == FULLSCREEN);
+			l = streamFrame;
+		} else {
+			l = new LogoFrame();
+			l.setScale(scale);
+		}
 		l.setAsset(RegionEnum.LEFT_EYE, leftEye);
 		l.setAsset(RegionEnum.RIGHT_EYE, rightEye);
 		l.setAsset(RegionEnum.SMILE, smile);
@@ -79,7 +84,7 @@ public class Main {
 	
 	private static void printHelp() {
 		System.out.println("Tool to create an interactive Crafterchen2 logo.");
-		System.out.println("Usage: [OPTIONS] [scale [blink [leftEye rightEye smile deco [leftEyeMood rightEyeMood smileMood decoMood]]]]");
+		System.out.println("Usage: [OPTIONS] [scale | fullscreen [blink [leftEye rightEye smile deco [leftEyeMood rightEyeMood smileMood decoMood]]]]");
 		System.out.println("-h, -?, --help, help : Prints this help and exits successfully.");
 		System.out.println("-c, --controller     : Opens with a control frame attached.");
 		System.out.println("-p, --presets        : Opens with a presets frame attached.");
@@ -100,9 +105,11 @@ public class Main {
 	
 	private static void printList() {
 		System.out.println("List of valid Input Parameters:");
-		System.out.println("├ Scale:");
+		System.out.println("├ Scale / Fullscreen:");
 		System.out.println("│ ├ " + KEEP + " (= don't override the scale)");
-		System.out.println("│ └ number between 20 and 80 (inclusive)");
+		System.out.println("│ ├ number between 20 and 80 (inclusive)");
+		System.out.println("│ ├ true (start the streaming-mode in fullscreen)");
+		System.out.println("│ └ false (start the streaming-mode in small)");
 		System.out.println("├ List of possible default asset values:");
 		System.out.println("│ ├ Eyes (Regions: " + RegionEnum.LEFT_EYE + ", " + RegionEnum.RIGHT_EYE + "):");
 		System.out.println("│ │ ├ " + NULL + " (= don't draw this region)");

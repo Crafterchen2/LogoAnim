@@ -1,7 +1,7 @@
 package com.github.crafterchen2.logoanim.components;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.frames.LogoFrame;
+import com.github.crafterchen2.logoanim.frames.DisplayFrame;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -18,7 +18,7 @@ public class PresetLibrary extends JComponent {
 	//Fields {
 	private final JSlider slider = new JSlider(5, 20, 10);
 	private final JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-	private LogoFrame logo;
+	private DisplayFrame logo;
 	//} Fields
 	
 	//Constructor {
@@ -26,7 +26,7 @@ public class PresetLibrary extends JComponent {
 		this(null);
 	}
 	
-	public PresetLibrary(LogoFrame logo) {
+	public PresetLibrary(DisplayFrame logo) {
 		setLayout(new BorderLayout());
 		setLogo(logo);
 		addDisplay(grid, EYE_2X2, EYE_2X2, AssetEnum.NORMAL, null, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL);
@@ -155,13 +155,13 @@ public class PresetLibrary extends JComponent {
 	 
 	 @return The current logo or {@code null} if no logo is set.
 	 */
-	public LogoFrame getLogo() {
+	public DisplayFrame getLogo() {
 		return logo;
 	}
 	//} Getter
 	
 	//Setter {
-	public void setLogo(LogoFrame logo) {
+	public void setLogo(DisplayFrame logo) {
 		this.logo = logo;
 	}
 	//} Setter

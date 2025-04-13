@@ -5,6 +5,7 @@ import java.util.Objects;
 //Classes {
 public class Parser {
 	
+	public static final int FULLSCREEN = -2;
 	//Fields {
 	public static final String KEEP = "keep";
 	public static final String NULL = "null";
@@ -27,7 +28,7 @@ public class Parser {
 	private static FullLogoConfig parseFullLogo(String entry) {
 		String[] arr = entry.split(", ", 3);
 		RegionEnum[] regs = RegionEnum.values();
-		int scale = parseScale(arr[0], DEFAULT.scale);
+		int scale = parseScaleOrFullscreen(arr[0], DEFAULT.scale);
 		boolean blink = parseBlink(arr[1], DEFAULT.blink);
 		return new FullLogoConfig(scale, blink, parseLogo(arr[2]));
 	}
@@ -74,9 +75,11 @@ public class Parser {
 		}
 	}
 	
-	public static int parseScale(String string, int def) {
+	public static int parseScaleOrFullscreen(String string, int def) {
 		if (string.contentEquals(KEEP)) return def;
-		IllegalArgumentException exc = new IllegalArgumentException("scale must be an integer between 10 and 80 (inclusive).");
+		if (string.contentEquals("true")) return FULLSCREEN;
+		if (string.contentEquals("false")) return FULLSCREEN * 2;
+		IllegalArgumentException exc = new IllegalArgumentException("scale must be an integer between 10 and 80 (inclusive) or \"true\" / \"false\" for fullscreen.");
 		try {
 			int parsed = Integer.parseInt(string);
 			if (parsed < RegionEnum.base || parsed > RegionEnum.base * 8) {

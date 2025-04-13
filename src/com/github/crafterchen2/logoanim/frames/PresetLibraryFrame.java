@@ -9,13 +9,13 @@ import java.awt.*;
 public class PresetLibraryFrame extends JFrame {
 	
 	//Constructor {
-	public PresetLibraryFrame(LogoFrame logo) throws HeadlessException {
+	public PresetLibraryFrame(DisplayFrame logo) throws HeadlessException {
 		super("Preset Library");
 		setSize(300, 600);
 		setLocationRelativeTo(logo);
 		setContentPane(new PresetLibrary(logo));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		LogoFrame.loadFrameIcon(this, "preset_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "preset_frame_icon");
 		setVisible(true);
 	}
 	//} Constructor

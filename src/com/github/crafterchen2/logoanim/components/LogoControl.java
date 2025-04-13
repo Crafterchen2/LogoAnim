@@ -1,7 +1,7 @@
 package com.github.crafterchen2.logoanim.components;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.frames.LogoFrame;
+import com.github.crafterchen2.logoanim.frames.DisplayFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,13 +10,13 @@ import java.awt.*;
 public class LogoControl extends JPanel {
 	
 	//Fields {
-	private final JSlider slider = new JSlider(RegionEnum.base, RegionEnum.base * 8);
+	private final JSlider slider = new JSlider();
 	private final MoodSelector moodSelector = new MoodSelector();
 	private final AssetSelector assetSelector = new AssetSelector(moodSelector);
 	private final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	private final JButton repaintButton = new JButton("Repaint");
 	private final JButton updateButton = new JButton("Update config");
-	private LogoFrame logo;
+	private DisplayFrame logo;
 	private boolean hasLogo;
 	private boolean ignoreListener = false;
 	//} Fields
@@ -26,18 +26,27 @@ public class LogoControl extends JPanel {
 		this(null);
 	}
 	
-	public LogoControl(LogoFrame logo) {
+	public LogoControl(DisplayFrame logo) {
 		setLogo(logo);
 		setLayout(new BorderLayout(3, 3));
 		setPreferredSize(moodSelector.getPreferredSize());
-		slider.setMinorTickSpacing(5);
-		slider.setMajorTickSpacing(10);
+		{
+			DisplayFrame l = getLogo();
+			if (!hasLogo) return;
+			slider.setMaximum(l.getMaxScale());
+			slider.setMinimum(l.getMinScale());
+			final int major = (int) (Math.pow(10, Math.ceil(Math.log10(l.getMaxScale())) - 1));
+			if (major > 1 && major % 2 == 0) {
+				slider.setMinorTickSpacing(major / 2);
+			}
+			slider.setMajorTickSpacing(major);
+		}
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.setOrientation(JSlider.VERTICAL);
 		slider.addChangeListener(_ -> {
 			if (ignoreListener) return;
-			LogoFrame l = getLogo();
+			DisplayFrame l = getLogo();
 			if (!hasLogo) return;
 			l.setScale(slider.getValue());
 		});
@@ -71,7 +80,7 @@ public class LogoControl extends JPanel {
 		updateButton.addActionListener(_ -> {
 			if (ignoreListener) return;
 			ignoreListener = true;
-			LogoFrame l = getLogo();
+			DisplayFrame l = getLogo();
 			if (hasLogo) {
 				slider.setValue(l.getScale());
 				for (RegionEnum reg : RegionEnum.values()) {
@@ -96,7 +105,7 @@ public class LogoControl extends JPanel {
 	
 	//Methods {
 	private void repaintLogo(boolean query) {
-		LogoFrame l = getLogo();
+		DisplayFrame l = getLogo();
 		if (!hasLogo) return;
 		if (query) {
 			l.setScale(slider.getValue());
@@ -119,7 +128,7 @@ public class LogoControl extends JPanel {
 	 
 	 @return The current logo or {@code null} if no logo is set.
 	 */
-	public LogoFrame getLogo() {
+	public DisplayFrame getLogo() {
 		hasLogo = logo != null;
 		setEnabled(hasLogo);
 		return logo;
@@ -127,7 +136,7 @@ public class LogoControl extends JPanel {
 	//} Getter
 	
 	//Setter {
-	public void setLogo(LogoFrame logo) {
+	public void setLogo(DisplayFrame logo) {
 		this.logo = logo;
 		getLogo();
 		if (hasLogo) {

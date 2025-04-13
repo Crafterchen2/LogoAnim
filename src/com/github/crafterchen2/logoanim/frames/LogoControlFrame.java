@@ -9,7 +9,7 @@ import java.awt.*;
 public class LogoControlFrame extends JFrame {
 	
 	//Constructor {
-	public LogoControlFrame(LogoFrame logo) throws HeadlessException {
+	public LogoControlFrame(DisplayFrame logo) throws HeadlessException {
 		super("Logo Controller");
 		LogoControl controller = new LogoControl(logo);
 		setMinimumSize(controller.getPreferredSize());
@@ -17,7 +17,7 @@ public class LogoControlFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(controller);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		LogoFrame.loadFrameIcon(this, "control_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "control_frame_icon");
 		setVisible(true);
 	}
 	//} Constructor
