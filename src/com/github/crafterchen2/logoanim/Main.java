@@ -61,9 +61,7 @@ public class Main {
 		}
 		final DisplayFrame l;
 		if (scale <= FULLSCREEN) {
-			final StreamFrame streamFrame = new StreamFrame();
-			streamFrame.setFullscreen(scale == FULLSCREEN);
-			l = streamFrame;
+			l = new StreamFrame(scale == FULLSCREEN);
 		} else {
 			l = new LogoFrame();
 			l.setScale(scale);
