@@ -33,19 +33,30 @@ public class StreamFrame extends DisplayFrame {
 			throw new RuntimeException(e);
 		}
 		setFullscreen(fullscreen);
-		JComponent bgc = new JComponent() {
-			@Override
-			protected void paintComponent(Graphics g) {
-				final int w = bgImg.getWidth() * getScale();
-				final int h = bgImg.getHeight() * getScale();
-				g.drawImage(bgImg, 0,0, w, h,null);
-			}
-		};
-		setContentPane(bgc);
+		setContentPane(makeContentPane());
 		setLayout(null);
 		add(display);
 		loadFrameIcon(this, "streaming_frame_icon");
 		repaint();
+	}
+	
+	private JPanel makeContentPane() {
+		return new JPanel(true) {
+			@Override
+			protected void paintComponent(Graphics g) {
+				final int w = bgImg.getWidth() * getScale();
+				final int h = bgImg.getHeight() * getScale();
+				g.drawImage(bgImg, 0, 0, w, h, null);
+			}
+		};
+	}
+	
+	private Rectangle calcLogoPos() {
+		int logo = 80;
+		int margin = 4;
+		int indent = logo + margin;
+		int scale = getScale();
+		return new Rectangle((bgImg.getWidth() - indent) * scale, (bgImg.getHeight() - indent) * scale, logo * scale, logo * scale);
 	}
 	
 	@Override
@@ -93,7 +104,7 @@ public class StreamFrame extends DisplayFrame {
 			setExtendedState(JFrame.NORMAL);
 			setSize(bgImg.getWidth() * getScale(), bgImg.getHeight() * getScale());
 		}
-		display.setBounds(bgImg.getWidth() * getScale() - 84 * this.scale, bgImg.getHeight() * getScale() - 84 * this.scale, 80 * this.scale, 80 * this.scale);
+		display.setBounds(calcLogoPos());
 	}
 	
 	@Override
