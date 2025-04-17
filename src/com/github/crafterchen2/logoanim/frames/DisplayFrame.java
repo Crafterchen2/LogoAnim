@@ -33,6 +33,10 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setUndecorated(true);
+		blinkBox.addActionListener(_ -> {
+			if (blinkBox.isSelected() == getShouldBlink()) return;
+			setShouldBlink(blinkBox.isSelected());
+		});
 		blinkTimer = new Timer(
 				5000, _ -> {
 			display.blink = true;
@@ -63,31 +67,17 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		JMenu menu = new JMenu();
 		JLabel title = new JLabel("Logo Animator Menu");
 		title.setFont(title.getFont().deriveFont(16f).deriveFont(Font.BOLD));
-		JMenuItem close = new JMenuItem("Close");
-		close.addActionListener(_ -> dispose());
-		JMenuItem closeAll = new JMenuItem("Close all windows");
-		closeAll.addActionListener(_ -> System.exit(0));
-		JMenuItem openController = new JMenuItem("Open new controller");
-		openController.addActionListener(_ -> new LogoControlFrame(this));
-		JMenuItem openLibrary = new JMenuItem("Open new library");
-		openLibrary.addActionListener(_ -> new PresetLibraryFrame(this));
-		JMenuItem copyToClipboard = new JMenuItem("Copy to Clipboard");
-		copyToClipboard.addActionListener(_ -> exportToClipboard());
-		blinkBox.addActionListener(_ -> {
-			if (blinkBox.isSelected() == getShouldBlink()) return;
-			setShouldBlink(blinkBox.isSelected());
-		});
 		menu.add(title);
 		menu.addSeparator();
 		menu.add(blinkBox);
 		menu.addSeparator();
-		menu.add(openController);
-		menu.add(openLibrary);
+		menu.add("Open new controller").addActionListener(_ -> new LogoControlFrame(this));
+		menu.add("Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
 		menu.addSeparator();
-		menu.add(copyToClipboard);
+		menu.add("Copy to Clipboard").addActionListener(_ -> exportToClipboard());
 		menu.addSeparator();
-		menu.add(close);
-		menu.add(closeAll);
+		menu.add("Close").addActionListener(_ -> dispose());
+		menu.add("Close all windows").addActionListener(_ -> System.exit(0));
 		return menu;
 	}
 	

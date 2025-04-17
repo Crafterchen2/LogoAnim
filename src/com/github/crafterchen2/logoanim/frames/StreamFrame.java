@@ -85,9 +85,7 @@ public class StreamFrame extends DisplayFrame {
 	protected JMenu makeMenu() {
 		JMenu menu = super.makeMenu();
 		menu.addSeparator();
-		JMenuItem item = new JMenuItem("Toggle Fullscreen");
-		item.addActionListener(_ -> setFullscreen(!isFullscreen()));
-		menu.add(item);
+		menu.add("Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
 		return menu;
 	}
 	
