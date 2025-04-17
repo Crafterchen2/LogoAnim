@@ -67,6 +67,15 @@ public class StreamFrame extends DisplayFrame {
 				if (isFullscreen()) return;
 				super.mouseDragged(e);
 			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON2) {
+					setFullscreen(!isFullscreen());
+				} else {
+					super.mouseClicked(e);
+				}
+			}
 		};
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
