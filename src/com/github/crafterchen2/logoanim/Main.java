@@ -59,6 +59,10 @@ public class Main {
 				}
 			}
 		}
+		if (Parser.arrContains(args, "-r", "--remote")) {
+			launchRemoteOnly(leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood, blink);
+			return;
+		}
 		final DisplayFrame l;
 		if (scale <= FULLSCREEN) {
 			l = new StreamFrame(scale == FULLSCREEN);
@@ -80,6 +84,10 @@ public class Main {
 		if (Parser.arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}
 	
+	private static void launchRemoteOnly(AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco, MoodEnum leftEyeMood, MoodEnum rightEyeMood, MoodEnum smileMood, MoodEnum decoMood, boolean blink){
+		
+	}
+	
 	private static void printHelp() {
 		System.out.println("Tool to create an interactive Crafterchen2 logo.");
 		System.out.println("Usage: [OPTIONS] [scale | fullscreen [blink [leftEye rightEye smile deco [leftEyeMood rightEyeMood smileMood decoMood]]]]");
@@ -87,6 +95,7 @@ public class Main {
 		System.out.println("-c, --controller     : Opens with a control frame attached.");
 		System.out.println("-p, --presets        : Opens with a presets frame attached.");
 		System.out.println("-l, --list           : Displays the possible values for the initial configuration and exits successfully.");
+		System.out.println("-r, --remote         : launches the program in remote-control-only mode.");
 	}
 	
 	private static void printAssets(AssetType type, String offset) {

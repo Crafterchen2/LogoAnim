@@ -1,5 +1,6 @@
-import com.github.crafterchen2.logoanim.MoodProvider;
+import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.AssetSelector;
+import com.github.crafterchen2.logoanim.components.LogoDisplay;
 import com.github.crafterchen2.logoanim.components.MoodSelector;
 import com.github.crafterchen2.logoanim.frames.StreamFrame;
 
@@ -7,13 +8,30 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 //Classes {
 public class Tests {
 	
 	//Methods {
 	public static void main(String[] args) {
-		streamFrameTest();
+		testStream();
+	}
+	
+	private static void testStream(){
+		Component[] cs = new Component[]{
+				new JButton("1"),
+				//new JLabel("2"),
+				//new JRootPane(),
+				//new LogoDisplay(new AssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.SMIRK, null), new MoodProvider.Default(MoodEnum.STAR, MoodEnum.GOOD, null, MoodEnum.SANS)),
+				//new LogoDisplay(new AssetProvider.Default(AssetEnum.EYE_3X1, AssetEnum.EYE_2X2, AssetEnum.SMIRK, null), new MoodProvider.Default(MoodEnum.STAR, MoodEnum.GOOD, null, MoodEnum.SANS)),
+				//new LogoDisplay(new AssetProvider.Default(AssetEnum.EYE_3X3, AssetEnum.EYE_2X2, AssetEnum.SMIRK, null), new MoodProvider.Default(MoodEnum.STAR, MoodEnum.GOOD, null, MoodEnum.SANS)),
+				//new JButton("3"),
+				};
+		LogoDisplay[] ds = Arrays.stream(cs)
+				.filter(component -> component instanceof LogoDisplay)
+				.toList().toArray(new LogoDisplay[0]);
+		System.out.println(ds.length);
 	}
 	
 	private static void streamFrameTest(){
