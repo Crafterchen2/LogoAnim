@@ -22,8 +22,6 @@ public class ClientConnection {
 		// get the output stream from the socket.
 		PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 		
-		System.out.println("Sending string to the ServerSocket");
-		
 		// write the header
 		out.println(ConnectionManager.VERSION);
 		out.println(alias);
