@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class ConnectionManager {
-	
+
+	public static final int VERSION = 1;
 	public static final int PORT = 7777;
 	private static final ArrayList<String> whitelist = new ArrayList<>();
 	private static ServerConnection serverConnection;
@@ -36,8 +37,8 @@ public class ConnectionManager {
 		}
 	}
 	
-	public static ClientConnection initClientConnection(String address, int port) {
-		clientConnection = new ClientConnection(address, port);
+	public static ClientConnection initClientConnection(String address, int port, String alias) {
+		clientConnection = new ClientConnection(address, port, alias);
 		return clientConnection;
 	}
 	

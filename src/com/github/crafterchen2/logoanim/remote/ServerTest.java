@@ -9,7 +9,10 @@ public class ServerTest {
 		try {
 			ServerConnection serverConnection = ConnectionManager.initServerConnection();
 			serverConnection.addMessageListener((socket, msg) -> {
-				System.out.println(socket+","+msg);
+				System.out.println(socket+" : \""+msg+"\"");
+			});
+			serverConnection.addRefuseListener((socket, reason) -> {
+				System.out.println(reason.name()+" : "+socket);
 			});
 			serverConnection.start();
 			System.in.read();

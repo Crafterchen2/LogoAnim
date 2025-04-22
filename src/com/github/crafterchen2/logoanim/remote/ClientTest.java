@@ -5,7 +5,7 @@ import java.io.IOException;
 public class ClientTest {
 	
 	public static void main(String[] args) {
-		ClientConnection clientConnection = ConnectionManager.initClientConnection("localhost",7777);
+		ClientConnection clientConnection = ConnectionManager.initClientConnection("localhost",ConnectionManager.PORT, "Crafterchen3");
 		try {
 			clientConnection.sendString("Hello World");
 		} catch (IOException e) {

@@ -1,35 +1,35 @@
 package com.github.crafterchen2.logoanim.remote;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class ClientConnection {
 	
 	private final String ip;
 	private final int port;
+	private final String alias;
 	
-	public ClientConnection(String ip, int port){
+	public ClientConnection(String ip, int port, String alias){
 		this.ip = ip;
 		this.port = port;
+		this.alias = alias;
 	}
 	
 	public void sendString(String str) throws IOException {
-		// Establish Connection
+		// establish Connection
 		Socket socket = new Socket(ip, port);
 		// get the output stream from the socket.
-		OutputStream outputStream = socket.getOutputStream();
-		// create a data output stream from the output stream so we can send data through it
-		DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+		PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 		
 		System.out.println("Sending string to the ServerSocket");
 		
-		// write the message we want to send
-		dataOutputStream.writeUTF(str);
-		dataOutputStream.flush(); // send the message
-		dataOutputStream.close(); // close the output stream when we're done.
+		// write the header
+		out.println(ConnectionManager.VERSION);
+		out.println(alias);
+		// write the message
+		out.println(str);
+		out.close();
 		socket.close();
 	}
 	
