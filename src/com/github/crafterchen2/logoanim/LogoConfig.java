@@ -33,6 +33,18 @@ public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider
 	public MoodEnum getMood(RegionEnum reg) {
 		return mood.getMood(reg);
 	}
+
+	@Override
+	public String toString() {
+		return asset.getAsset(RegionEnum.LEFT_EYE) + " " +
+				asset.getAsset(RegionEnum.RIGHT_EYE) + " " +
+				asset.getAsset(RegionEnum.SMILE) + " " +
+				asset.getAsset(RegionEnum.DECO) + " " +
+				mood.getMood(RegionEnum.LEFT_EYE) + " " +
+				mood.getMood(RegionEnum.RIGHT_EYE) + " " +
+				mood.getMood(RegionEnum.SMILE) + " " +
+				mood.getMood(RegionEnum.DECO);
+	}
 	//} Overrides
 }
 //} Classes

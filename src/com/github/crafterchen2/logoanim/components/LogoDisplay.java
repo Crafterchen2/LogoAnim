@@ -23,7 +23,7 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 		this(null, null);
 	}
 	
-	public LogoDisplay(AssetProvider defAssets, MoodProvider defMoods) {
+	public LogoDisplay(ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) {
 		setAsset(defAssets);
 		setMood(defMoods);
 		setDoubleBuffered(true);

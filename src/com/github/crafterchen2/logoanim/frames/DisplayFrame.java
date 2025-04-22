@@ -27,7 +27,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		this(title, null, null);
 	}
 	
-	public DisplayFrame(String title, AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
+	public DisplayFrame(String title, ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) throws HeadlessException {
 		super(title);
 		display = new LogoDisplay(defAssets, defMoods);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
