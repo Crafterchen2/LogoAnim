@@ -11,7 +11,8 @@ import java.io.IOException;
 public class ClientTest {
 	
 	public static void main(String[] args) {
-		ClientConnection clientConnection = new ClientConnection("localhost", NetworkingDetails.PORT, "Crafterchen3");
+		//ClientConnection clientConnection = new ClientConnection("6.tcp.eu.ngrok.io", 14170, "Crafterchen3");
+		ClientConnection clientConnection = new ClientConnection("localhost", 7777, "Crafterchen2");
 		new RemoteLogoFrame(clientConnection);
 
 	}

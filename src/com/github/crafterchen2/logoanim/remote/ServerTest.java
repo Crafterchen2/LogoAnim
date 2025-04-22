@@ -5,20 +5,26 @@ import com.github.crafterchen2.logoanim.frames.DisplayFrame;
 import com.github.crafterchen2.logoanim.frames.LogoFrame;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class ServerTest {
 
-	private static LogoFrame frame;
+	private static HashMap<ServerConnection.SocketInfo, LogoFrame> frames = new HashMap<>();
 
 	public static void main(String[] args) {
 		NetworkingDetails.addToWhitelist("/127.0.0.1");
-		frame = new LogoFrame();
 		try {
 			ServerConnection serverConnection = new ServerConnection(new ServerConnection.RequestHandler() {
 				@Override
 				public String handleMessage(ServerConnection.SocketInfo socket, String msg) {
 					LogoConfig config = parseConfig(msg);
+					ServerConnection.SocketInfo reduced = new ServerConnection.SocketInfo(socket.ip(), -1, socket.alias());
+					if (!frames.containsKey(reduced)) {
+						frames.put(reduced, new LogoFrame());
+					}
+					LogoFrame frame = frames.get(reduced);
 					frame.setAsset(config);
 					frame.setMood(config);
 					frame.repaint();
@@ -33,6 +39,9 @@ public class ServerTest {
 			serverConnection.start();
 			System.in.read();
 			System.out.println("Closing");
+			frames.forEach((k, v) -> {
+				v.dispose();
+			});
 			serverConnection.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
