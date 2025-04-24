@@ -15,6 +15,7 @@ public class ServerTest {
 
 	public static void main(String[] args) {
 		NetworkingDetails.addToWhitelist("/127.0.0.1");
+		NetworkingDetails.addToWhitelist("/0:0:0:0:0:0:0:1");
 		try {
 			ServerConnection serverConnection = new ServerConnection(new ServerConnection.RequestHandler() {
 				@Override
@@ -25,6 +26,7 @@ public class ServerTest {
 						frames.put(reduced, new LogoFrame());
 					}
 					LogoFrame frame = frames.get(reduced);
+					frame.setScale(20);
 					frame.setAsset(config);
 					frame.setMood(config);
 					frame.repaint();
@@ -39,9 +41,7 @@ public class ServerTest {
 			serverConnection.start();
 			System.in.read();
 			System.out.println("Closing");
-			frames.forEach((k, v) -> {
-				v.dispose();
-			});
+			frames.forEach((k, v) -> v.dispose());
 			serverConnection.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);

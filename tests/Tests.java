@@ -2,6 +2,8 @@ import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.AssetSelector;
 import com.github.crafterchen2.logoanim.components.LogoDisplay;
 import com.github.crafterchen2.logoanim.components.MoodSelector;
+import com.github.crafterchen2.logoanim.frames.ClientConnectorFrame;
+import com.github.crafterchen2.logoanim.frames.LogoFrame;
 import com.github.crafterchen2.logoanim.frames.StreamFrame;
 
 import javax.swing.*;
@@ -15,7 +17,11 @@ public class Tests {
 	
 	//Methods {
 	public static void main(String[] args) {
-		testStream();
+		clientTest();
+	}
+	
+	private static void clientTest(){
+		new ClientConnectorFrame(new LogoFrame());
 	}
 	
 	private static void testStream(){
