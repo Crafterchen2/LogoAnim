@@ -1,12 +1,10 @@
 package com.github.crafterchen2.logoanim.remote;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.frames.DisplayFrame;
 import com.github.crafterchen2.logoanim.frames.LogoFrame;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class ServerTest {
