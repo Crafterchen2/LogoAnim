@@ -147,14 +147,6 @@ public class PresetLibrary extends JComponent {
 	//} Methods
 	
 	//Getter {
-	
-	/**
-	 Returns the current logo enables / disables the components accordingly.
-	 It is highly recommended to check the value of {@code hasLogo} before proceeding,
-	 as this method can return {@code null}.
-	 
-	 @return The current logo or {@code null} if no logo is set.
-	 */
 	public DisplayFrame getLogo() {
 		return logo;
 	}
