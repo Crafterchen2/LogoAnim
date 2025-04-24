@@ -1,6 +1,5 @@
 package com.github.crafterchen2.logoanim.remote;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class NetworkingDetails {
