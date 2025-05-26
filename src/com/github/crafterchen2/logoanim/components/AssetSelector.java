@@ -108,33 +108,32 @@ public class AssetSelector extends Selector implements AssetProvider {
 		@Override
 		protected void paintComponent(Graphics g) {
 			g.setColor(Objects.equals(assets.get(reg), subject) ? new Color(192, 192, 192) : new Color(96, 96, 96));
-			int w = getWidth();
-			int h = getHeight();
-			g.fillRect(0, 0, w, h);
-			final int m = Math.min(w, h);
-			final int c = m - m % RegionEnum.base;
-			int x = w / 2 - c / 2;
-			int y = h / 2 - c / 2;
+			g.fillRect(0, 0, getWidth(), getHeight());
+			int w = (reg.ratio <= 1.0) ? (int) (getWidth() / reg.ratio) : getWidth();
+			int h = (reg.ratio >= 1.0) ? (int) (getHeight() * reg.ratio) : getHeight();
+			w -= w % RegionEnum.base;
+			h -= h % RegionEnum.base;
+			int x = getWidth() / 2 - w / 2;
+			int y = getHeight() / 2 - h / 2;
+			x = y = 0;
 			g.setColor(new Color(0, 0, 0));
-			g.fillRect(x, y, c, c);
+			g.fillRect(x, y, w, h);
 			if (subject == null) return;
 			MoodEnum mood = moodProvider.getMood(reg);
 			BufferedImage img = subject.getImg();
 			if (mood != null) img = AssetEnum.recolorImg(mood, img);
-			w = (reg.ratio < 1.0) ? (int) (c * reg.ratio) : c;
-			h = (reg.ratio > 1.0) ? (int) (c / reg.ratio) : c;
 			//IMPROVEME: replace if with math if possible
-			if (w % RegionEnum.base != 0 || h % RegionEnum.base != 0) {
-				final int temp = w - w % RegionEnum.base - ((h % RegionEnum.base != 0) ? RegionEnum.base : 0);
-				h -= h % RegionEnum.base - ((w % RegionEnum.base != 0) ? RegionEnum.base : 0);
-				w = temp;
-			}
+			//if (w % RegionEnum.base != 0 || h % RegionEnum.base != 0) {
+			//	final int temp = w - w % RegionEnum.base - ((h % RegionEnum.base != 0) ? RegionEnum.base : 0);
+			//	h -= h % RegionEnum.base - ((w % RegionEnum.base != 0) ? RegionEnum.base : 0);
+			//	w = temp;
+			//}
 			w = (int) (w * img.getWidth() / (Math.abs(reg.w) * RegionEnum.base));
 			h = (int) (h * img.getHeight() / (Math.abs(reg.h) * RegionEnum.base));
 			w -= w % img.getWidth();
 			h -= h % img.getHeight();
-			x += c / 2 - w / 2;
-			y += c / 2 - h / 2;
+			//x += cw / 2 - w / 2;
+			//y += ch / 2 - h / 2;
 			g.drawImage(img, x, y, Math.abs(w), Math.abs(h), null);
 		}
 		//} Overrides
