@@ -1,6 +1,8 @@
 package com.github.crafterchen2.logoanim.frames;
 
-import com.github.crafterchen2.logoanim.*;
+import com.github.crafterchen2.logoanim.AssetProvider;
+import com.github.crafterchen2.logoanim.JavaFxWrapper;
+import com.github.crafterchen2.logoanim.MoodProvider;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -11,11 +13,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Objects;
 
+//Classes {
 public class StreamFrame extends DisplayFrame {
 	
-	private int scale;
+	//Fields {
 	private final BufferedImage bgImg;
+	private int scale;
+	//} Fields
 	
+	//Constructor {
 	public StreamFrame() throws HeadlessException {
 		this(true);
 	}
@@ -43,24 +49,29 @@ public class StreamFrame extends DisplayFrame {
 			contentPane.add(logos, RootLayout.LOGO);
 			JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
 			//TODO: remove
-			wrapper.setVideoID("UB7BOqQ_WPE");
+			wrapper.setVideoID("EXH4bYvCnHs");
 			wrapper.setChatVisible(true);
 			//remove end
 			contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
+			wrapper.setControlVisibility(true);
 		}
 		setContentPane(contentPane);
 		loadFrameIcon(this, "streaming_frame_icon");
 		repaint();
 	}
+	//} Constructor
 	
+	//Methods {
 	private JPanel makeContentPane() {
 		return new JPanel(true) {
+			//Overrides {
 			@Override
 			protected void paintComponent(Graphics g) {
 				final int w = bgImg.getWidth() * getScale();
 				final int h = bgImg.getHeight() * getScale();
 				g.drawImage(bgImg, 0, 0, w, h, null);
 			}
+			//} Overrides
 		};
 	}
 	
@@ -70,7 +81,7 @@ public class StreamFrame extends DisplayFrame {
 		int x = 300;
 		int y = 4;
 		int s = getScale();
-		return new Rectangle(x * s, y *s, w * s, h * s);
+		return new Rectangle(x * s, y * s, w * s, h * s);
 	}
 	
 	private Rectangle calcLogoPos() {
@@ -80,10 +91,25 @@ public class StreamFrame extends DisplayFrame {
 		int scale = getScale();
 		return new Rectangle((bgImg.getWidth() - indent) * scale, (bgImg.getHeight() - indent) * scale, logo * scale, logo * scale);
 	}
+	//} Methods
 	
+	//Getter {
+	private boolean isFullscreen() {
+		return getScale() == getMaxScale();
+	}
+	//} Getter
+	
+	//Setter {
+	public void setFullscreen(boolean fullscreen) {
+		setScale((fullscreen) ? getMaxScale() : getMinScale());
+	}
+	//} Setter
+	
+	//Overrides {
 	@Override
 	protected void applyMouseAdapter() {
 		DisplayMouseAdapter mouseAdapter = new DisplayMouseAdapter(makeMenu(), this) {
+			//Overrides {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (isFullscreen()) return;
@@ -98,6 +124,7 @@ public class StreamFrame extends DisplayFrame {
 					super.mouseClicked(e);
 				}
 			}
+			//} Overrides
 		};
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
@@ -108,20 +135,13 @@ public class StreamFrame extends DisplayFrame {
 		JMenu menu = super.makeMenu();
 		menu.addSeparator();
 		menu.add("Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
+		menu.add("Toggle Chat Controller").addActionListener(_ -> JavaFxWrapper.getWrapper().setControlVisibility(!JavaFxWrapper.getWrapper().getControlVisibility()));
 		return menu;
-	}
-	
-	private boolean isFullscreen() {
-		return getScale() == getMaxScale();
 	}
 	
 	@Override
 	public int getScale() {
 		return scale;
-	}
-	
-	public void setFullscreen(boolean fullscreen) {
-		setScale((fullscreen) ? getMaxScale() : getMinScale());
 	}
 	
 	@Override
@@ -144,14 +164,19 @@ public class StreamFrame extends DisplayFrame {
 	public int getMinScale() {
 		return 4;
 	}
+	//} Overrides
 	
+	//Classes {
 	private class RootLayout implements LayoutManager {
 		
+		//Fields {
 		public static final String CHAT = "chat";
 		public static final String LOGO = "logo";
 		
-		private HashMap<Component, String> map = HashMap.newHashMap(2);
+		private final HashMap<Component, String> map = HashMap.newHashMap(2);
+		//} Fields
 		
+		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
 			if (name == null || (!name.equals(CHAT) && !name.equals(LOGO))) throw new IllegalArgumentException("Illegal key for layout");
@@ -182,24 +207,27 @@ public class StreamFrame extends DisplayFrame {
 					switch (v) {
 						case CHAT -> c.setBounds(calcChatPos());
 						case LOGO -> c.setBounds(calcLogoPos());
-						default -> {}
+						default -> {
+						}
 					}
 				}
 			}
 		}
+		//} Overrides
 		
 	}
 	
 	private class LogoLayout implements LayoutManager {
 		
+		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-		
+			
 		}
 		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-		
+			
 		}
 		
 		@Override
@@ -218,9 +246,12 @@ public class StreamFrame extends DisplayFrame {
 			synchronized (parent.getTreeLock()) {
 				for (Component c : parent.getComponents()) {
 					Dimension s = calcLogoPos().getSize();
-					c.setBounds(0,0,s.width, s.height);
+					c.setBounds(0, 0, s.width, s.height);
 				}
 			}
 		}
+		//} Overrides
 	}
+	//} Classes
 }
+//} Classes

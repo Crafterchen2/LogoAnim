@@ -15,7 +15,28 @@ public class Tests {
 	
 	//Methods {
 	public static void main(String[] args) {
-		testStream();
+		//testStream();
+		idRegexTest();
+	}
+	
+	private static void idRegexTest() {
+		String[] texts = new String[]{
+				"https://www.youtube.com/watch?v=O_1z0UhvY2Y",
+				"O_1z0UhvY2Y",
+				"https://www.youtube.com/watch?v=O_1z0:UhvY2Y",
+				"O_1z0:UhvY2Y",
+				"https://www.youtube.com/watch?v=O_1z0:UhvY2",
+				"O_1z0:UhvY2",
+		};
+		
+		for (String text : texts) {
+			if (!text.matches(".*[A-Za-z0-9_-]{11}$")) {
+				System.out.println("no match");
+				continue;
+			}
+			text = text.replaceFirst(".*(?=[A-Za-z0-9_-]{11}$)", "");
+			System.out.println(text);
+		}
 	}
 	
 	private static void testStream(){
