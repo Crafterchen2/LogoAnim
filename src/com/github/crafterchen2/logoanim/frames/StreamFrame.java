@@ -1,10 +1,8 @@
 package com.github.crafterchen2.logoanim.frames;
 
-import com.github.crafterchen2.logoanim.AssetEnum;
-import com.github.crafterchen2.logoanim.AssetProvider;
-import com.github.crafterchen2.logoanim.MoodEnum;
-import com.github.crafterchen2.logoanim.MoodProvider;
+import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.LogoDisplay;
+import com.sun.source.tree.ContinueTree;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,7 +11,9 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.Flow;
 
 public class StreamFrame extends DisplayFrame {
 	
@@ -38,8 +38,19 @@ public class StreamFrame extends DisplayFrame {
 		}
 		setFullscreen(fullscreen);
 		setContentPane(makeContentPane());
-		setLayout(new Layout());
-		add(display);
+		setLayout(new RootLayout());
+		JPanel logos = new JPanel(new LogoLayout());
+		{
+			logos.add(display);
+		}
+		add(logos, RootLayout.LOGO);
+		JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+		JComponent chatPanel = wrapper.getChatPanel();
+		//TODO: remove
+		wrapper.setVideoID("UB7BOqQ_WPE");
+		wrapper.setChatVisible(true);
+		//remove end
+		add(chatPanel, RootLayout.CHAT);
 		add(new LogoDisplay(new AssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.SMIRK, null), new MoodProvider.Default(MoodEnum.STAR, MoodEnum.GOOD, null, MoodEnum.SANS)));
 		loadFrameIcon(this, "streaming_frame_icon");
 		repaint();
@@ -54,6 +65,15 @@ public class StreamFrame extends DisplayFrame {
 				g.drawImage(bgImg, 0, 0, w, h, null);
 			}
 		};
+	}
+	
+	private Rectangle calcChatPos() {
+		int w = 80;
+		int h = 124;
+		int x = 300;
+		int y = 4;
+		int s = getScale();
+		return new Rectangle(x * s, y *s, w * s, h * s);
 	}
 	
 	private Rectangle calcLogoPos() {
@@ -128,7 +148,52 @@ public class StreamFrame extends DisplayFrame {
 		return 1;
 	}
 	
-	private class Layout implements LayoutManager {
+	private class RootLayout implements LayoutManager {
+		
+		public static final String CHAT = "chat";
+		public static final String LOGO = "logo";
+		
+		private HashMap<Component, String> map = HashMap.newHashMap(2);
+		
+		@Override
+		public void addLayoutComponent(String name, Component comp) {
+			if (!name.equals(CHAT) && !name.equals(LOGO)) throw new IllegalArgumentException("Illegal key for layout");
+			map.put(comp, name);
+		}
+		
+		@Override
+		public void removeLayoutComponent(Component comp) {
+			map.remove(comp);
+		}
+		
+		@Override
+		public Dimension preferredLayoutSize(Container parent) {
+			return minimumLayoutSize(parent);
+		}
+		
+		@Override
+		public Dimension minimumLayoutSize(Container parent) {
+			return new Dimension(bgImg.getWidth() * getScale(), bgImg.getHeight() * getScale());
+		}
+		
+		@Override
+		public void layoutContainer(Container parent) {
+			synchronized (parent.getTreeLock()) {
+				for (Component c : parent.getComponents()) {
+					String v = map.get(c);
+					if (v == null) continue;
+					switch (v) {
+						case CHAT -> c.setBounds(calcChatPos());
+						case LOGO -> c.setBounds(calcLogoPos());
+						default -> {}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	private class LogoLayout implements LayoutManager {
 		
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
@@ -154,9 +219,7 @@ public class StreamFrame extends DisplayFrame {
 		@Override
 		public void layoutContainer(Container parent) {
 			synchronized (parent.getTreeLock()) {
-				LogoDisplay[] ds = Arrays.stream(parent.getComponents())
-						.filter(component -> component instanceof LogoDisplay)
-						.toList().toArray(new LogoDisplay[0]); //Is warning, but works reliably because of the filter.
+				Component[] ds = parent.getComponents();
 				if (ds.length == 0) return;
 				if (ds.length == 1) {
 					ds[0].setBounds(calcLogoPos());
