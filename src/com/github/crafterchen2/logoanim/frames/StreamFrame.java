@@ -1,8 +1,6 @@
 package com.github.crafterchen2.logoanim.frames;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.components.LogoDisplay;
-import com.sun.source.tree.ContinueTree;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,10 +8,8 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.Flow;
 
 public class StreamFrame extends DisplayFrame {
 	
@@ -37,21 +33,22 @@ public class StreamFrame extends DisplayFrame {
 			throw new RuntimeException(e);
 		}
 		setFullscreen(fullscreen);
-		setContentPane(makeContentPane());
-		setLayout(new RootLayout());
-		JPanel logos = new JPanel(new LogoLayout());
+		JPanel contentPane = makeContentPane();
 		{
-			logos.add(display);
+			contentPane.setLayout(new RootLayout());
+			JPanel logos = new JPanel(new LogoLayout());
+			{
+				logos.add(display);
+			}
+			contentPane.add(logos, RootLayout.LOGO);
+			JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+			//TODO: remove
+			wrapper.setVideoID("UB7BOqQ_WPE");
+			wrapper.setChatVisible(true);
+			//remove end
+			contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
 		}
-		add(logos, RootLayout.LOGO);
-		JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-		JComponent chatPanel = wrapper.getChatPanel();
-		//TODO: remove
-		wrapper.setVideoID("UB7BOqQ_WPE");
-		wrapper.setChatVisible(true);
-		//remove end
-		add(chatPanel, RootLayout.CHAT);
-		add(new LogoDisplay(new AssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.SMIRK, null), new MoodProvider.Default(MoodEnum.STAR, MoodEnum.GOOD, null, MoodEnum.SANS)));
+		setContentPane(contentPane);
 		loadFrameIcon(this, "streaming_frame_icon");
 		repaint();
 	}
@@ -145,7 +142,7 @@ public class StreamFrame extends DisplayFrame {
 	
 	@Override
 	public int getMinScale() {
-		return 1;
+		return 4;
 	}
 	
 	private class RootLayout implements LayoutManager {
@@ -157,7 +154,7 @@ public class StreamFrame extends DisplayFrame {
 		
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-			if (!name.equals(CHAT) && !name.equals(LOGO)) throw new IllegalArgumentException("Illegal key for layout");
+			if (name == null || (!name.equals(CHAT) && !name.equals(LOGO))) throw new IllegalArgumentException("Illegal key for layout");
 			map.put(comp, name);
 		}
 		
@@ -219,15 +216,10 @@ public class StreamFrame extends DisplayFrame {
 		@Override
 		public void layoutContainer(Container parent) {
 			synchronized (parent.getTreeLock()) {
-				Component[] ds = parent.getComponents();
-				if (ds.length == 0) return;
-				if (ds.length == 1) {
-					ds[0].setBounds(calcLogoPos());
-					return;
+				for (Component c : parent.getComponents()) {
+					Dimension s = calcLogoPos().getSize();
+					c.setBounds(0,0,s.width, s.height);
 				}
-				Rectangle p = calcLogoPos();
-				final Dimension mainMin = new Dimension(p.width / 2, p.height / 2);
-				
 			}
 		}
 	}
