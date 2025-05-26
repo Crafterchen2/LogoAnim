@@ -37,8 +37,8 @@ public class AssetSelector extends Selector implements AssetProvider {
 		setLayout(new GridLayout(2, 2));
 		JPanel leftPanel = new JPanel(new GridLayout(3, 0, 3, 3));
 		JPanel rightPanel = new JPanel(new GridLayout(3, 0, 3, 3));
-		JPanel smilePanel = new JPanel(new GridLayout(0, 1, 3, 3));
-		JPanel decoPanel = new JPanel(new GridLayout(0, 1, 3, 3));
+		JPanel smilePanel = new JPanel(new GridLayout(0, 3, 3, 3));
+		JPanel decoPanel = new JPanel(new GridLayout(0, 3, 3, 3));
 		leftPanel.add(new AssetButton(RegionEnum.LEFT_EYE, null));
 		rightPanel.add(new AssetButton(RegionEnum.RIGHT_EYE, null));
 		smilePanel.add(new AssetButton(RegionEnum.SMILE, null));
