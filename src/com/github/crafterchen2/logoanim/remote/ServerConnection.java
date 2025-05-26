@@ -14,14 +14,10 @@ public class ServerConnection {
     private final RequestHandler requestHandler;
     private final Thread thread = new Thread(this::mainLoop);
 
-    public ServerConnection(int port, RequestHandler requestHandler) throws IOException {
-        this.serverSocket = new ServerSocket(port);
+    public ServerConnection(RequestHandler requestHandler) throws IOException {
+        this.serverSocket = new ServerSocket(0);
         this.requestHandler = requestHandler;
         serverSocket.setSoTimeout(1000);
-    }
-
-    public ServerConnection(RequestHandler requestHandler) throws IOException {
-        this(NetworkingDetails.PORT, requestHandler);
     }
 
     public void close() throws IOException {
@@ -30,6 +26,10 @@ public class ServerConnection {
         }
         while (thread.isAlive()); // Wait for the thread to exit
         serverSocket.close();
+    }
+    
+    public int getLocalPort(){
+        return serverSocket.getLocalPort();
     }
 
     private void mainLoop() {

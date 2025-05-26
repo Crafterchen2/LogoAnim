@@ -18,7 +18,7 @@ public class ServerTest {
 			ServerConnection serverConnection = new ServerConnection(new ServerConnection.RequestHandler() {
 				@Override
 				public String handleMessage(ServerConnection.SocketInfo socket, String msg) {
-					LogoConfig config = parseConfig(msg);
+					LogoConfig config = Parser.parseLogo(msg, Parser.DEFAULT);
 					ServerConnection.SocketInfo reduced = new ServerConnection.SocketInfo(socket.ip(), -1, socket.alias());
 					if (!frames.containsKey(reduced)) {
 						frames.put(reduced, new LogoFrame());
@@ -37,6 +37,7 @@ public class ServerTest {
 				}
 			});
 			serverConnection.start();
+			System.out.println(serverConnection.getLocalPort());
 			System.in.read();
 			System.out.println("Closing");
 			frames.forEach((k, v) -> v.dispose());
@@ -44,35 +45,6 @@ public class ServerTest {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private static LogoConfig parseConfig(String config) {
-		String[] parts = config.split(" ");
-		AssetEnum leftEyeAsset = parseAsset(parts[0]);
-		AssetEnum rightEyeAsset = parseAsset(parts[1]);
-		AssetEnum smileAsset = parseAsset(parts[2]);
-		AssetEnum decoAsset = parseAsset(parts[3]);
-		ImmutableAssetProvider assetProvider = new ImmutableAssetProvider.Default(leftEyeAsset, rightEyeAsset, smileAsset, decoAsset);
-		MoodEnum leftEyeMood = parseMood(parts[4]);
-		MoodEnum rightEyeMood = parseMood(parts[5]);
-		MoodEnum smileMood = parseMood(parts[6]);
-		MoodEnum decoMood = parseMood(parts[7]);
-		ImmutableMoodProvider moodProvide = new ImmutableMoodProvider.Default(leftEyeMood, rightEyeMood, smileMood, decoMood);
-		return new LogoConfig(assetProvider, moodProvide);
-	}
-
-	private static AssetEnum parseAsset(String part) {
-		if (Objects.equals(part, "null")) {
-			return null;
-		}
-		return AssetEnum.valueOf(part);
-	}
-
-	private static MoodEnum parseMood(String part) {
-		if (Objects.equals(part, "null")) {
-			return null;
-		}
-		return MoodEnum.valueOf(part);
 	}
 
 }

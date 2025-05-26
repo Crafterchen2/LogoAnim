@@ -13,7 +13,10 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class StreamFrame extends DisplayFrame {
 	
@@ -130,14 +133,30 @@ public class StreamFrame extends DisplayFrame {
 	
 	private class Layout implements LayoutManager {
 		
+		private final HashMap<String, LogoDisplay> map = HashMap.newHashMap(1);
+		
+		public Layout() {
+			map.put(null, display);
+		}
+		
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-		
+			if (!(comp instanceof LogoDisplay)) throw new IllegalArgumentException("comp must be instance of LogoDisplay");
+			if (name == null) throw new IllegalArgumentException("Only the StreamFrame may add itself using null");
+			map.put(name, (LogoDisplay) comp);
 		}
 		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-		
+			if (!(comp instanceof LogoDisplay)) throw new IllegalArgumentException("comp must be instance of LogoDisplay");
+			AtomicReference<String> key = new AtomicReference<>(null);
+			map.forEach((string, component) -> {
+				if (component.equals(comp)) {
+					key.set(string);
+				}
+			});
+			if (key.get() == null) throw new IllegalArgumentException("Can't remove the main LogoDisplay of StreamFrame");
+			map.remove(key.get());
 		}
 		
 		@Override
@@ -153,18 +172,11 @@ public class StreamFrame extends DisplayFrame {
 		
 		@Override
 		public void layoutContainer(Container parent) {
-			synchronized (parent.getTreeLock()) {
-				LogoDisplay[] ds = Arrays.stream(parent.getComponents())
-						.filter(component -> component instanceof LogoDisplay)
-						.toList().toArray(new LogoDisplay[0]); //Is warning, but works reliably because of the filter.
-				if (ds.length == 0) return;
-				if (ds.length == 1) {
-					ds[0].setBounds(calcLogoPos());
-					return;
-				}
-				Rectangle p = calcLogoPos();
-				final Dimension mainMin = new Dimension(p.width / 2, p.height / 2);
-				
+			synchronized (parent.getTreeLock()) {//.setBounds(calcLogoPos());
+				if (map.isEmpty()) return;
+				map.forEach((string, logoDisplay) -> {
+					
+				});
 			}
 		}
 	}
