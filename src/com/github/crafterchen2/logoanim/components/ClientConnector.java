@@ -6,19 +6,22 @@ import com.github.crafterchen2.logoanim.frames.DisplayFrame;
 import com.github.crafterchen2.logoanim.remote.ClientConnection;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.io.IOException;
 
 public class ClientConnector extends JPanel implements LogoChangedListener {
 	
 	//Fields {
+	public static final int MAX_ALIAS_LENGTH = 16;
+	
 	private final JLabel status = new JLabel();
 	private final JTextField alias = new JTextField();
 	private final JTextField ip = new JTextField();
 	private final JButton button = new JButton();
 	private DisplayFrame logo;
 	private ClientConnection connection = null;
-	private final Timer cooldown = new Timer(250, e -> send());
+	private final Timer cooldown = new Timer(250, _ -> send());
 	//} Fields
 	
 	//Constructor {
@@ -27,13 +30,26 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	}
 	
 	public ClientConnector(DisplayFrame logo) {
-		super(new GridLayout(2,2));
+		super(new BorderLayout());
 		setLogo(logo);
 		button.addActionListener(e -> toggleConnect());
-		add(status);
-		add(button);
-		add(alias);
-		add(ip);
+		alias.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Alias"));
+		alias.setMinimumSize(new Dimension(60,0));
+		ip.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Ip:Port"));
+		ip.setMinimumSize(new Dimension(60,0));
+		JPanel north = new JPanel(new GridLayout(1,2));
+		{
+			north.add(status);
+			north.add(button);
+		}
+		add(north, BorderLayout.NORTH);
+		JSplitPane center = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
+		center.setDividerLocation(100);
+		{
+			center.setLeftComponent(alias);
+			center.setRightComponent(ip);
+		}
+		add(center, BorderLayout.CENTER);
 		cooldown.stop();
 		cooldown.setRepeats(false);
 	}
@@ -49,35 +65,63 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	}
 	
 	public void disconnect() {
+		if (!isConnected()) return;
 		connection = null;
 		updateStatus();
 		updateButton();
 	}
 	
-	public boolean connect() {
-		if (isConnected()) return false;
+	public void connect() {
+		if (isConnected()) return;
 		try {
-			String[] parts = ip.getText().split(":", 2);
+			//Regex only checks the following:
+			// * String has 1 of ':'
+			// * String has at least 1 digit behind ':'
+			// * No other characters than digits between ':' and end of string
+			//Everything else should be checked in parsePort(String port) for proper error handling.
+			//IMPROVEME: Regex accepts also when multiple ":" are present, should only do that when those ":" are surrounded by "[" and "]".
+			String[] parts = ip.getText().split(":(?=\\d+$)", 2);
 			String a = alias.getText();
-			a = a.substring(0, Math.min(24, a.length()));
-			connection = new ClientConnection(parts[0], Integer.parseInt(parts[1]), a);
+			if (a.isBlank()) {
+				status.setText("Status: ❌ No alias");
+				return;
+			}
+			if (a.length() > MAX_ALIAS_LENGTH) {
+				a = a.substring(0, MAX_ALIAS_LENGTH);
+				alias.setText(a);
+			}
+			String portStr = (parts.length > 1) ? parts[1] : null;
+			int port = parsePort(portStr);
+			connection = new ClientConnection(parts[0], port, a);
 			send();
 			updateStatus();
 			updateButton();
-			return true;
 		} catch (RuntimeException e) {
 			Throwable t = e.getCause();
 			if (t == null) {
 				System.out.println("An unknown error occurred while trying to connect.");	
 			} else {
-				System.out.println("Error while connecting: " + t.getMessage());
+				printDetailError(t);
 			}
 			connection = null;
-			return false;
 		} catch (Exception e) {
-			System.out.println("Error while connecting: " + e.getMessage());
+			printDetailError(e);
 			connection = null;
-			return false;
+		}
+	}
+	
+	private static void printDetailError(Throwable t) {
+		System.out.println("Error while connecting: " + t.getClass().getName() + '[' + t.getMessage() + ']');
+	}
+	
+	private int parsePort(String port) {
+		try {
+			int rv = Integer.parseInt(port);
+			if (rv < 0 || rv > 65535) throw new IllegalArgumentException("port must be between 0 and 65535 (inclusive)");
+			return rv;
+		} catch (Exception e) {
+			status.setText("Status: ❌ Invalid port");
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -91,7 +135,7 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	
 	private void updateStatus() {
 		if (logo == null) {
-			status.setText("Status: ❌ No frame.");
+			status.setText("Status: ❌ No frame");
 		} else {
 			if (isConnected()) {
 				status.setText("Status: ✔️ Connected");
