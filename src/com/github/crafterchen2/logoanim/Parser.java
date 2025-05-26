@@ -1,16 +1,15 @@
 package com.github.crafterchen2.logoanim;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 //Classes {
-public class Parser {
+public abstract class Parser {
 	
 	public static final int FULLSCREEN = -2;
 	//Fields {
 	public static final String KEEP = "keep";
 	public static final String NULL = "null";
-	public static final String CSV_KEY = "leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood";
-	public static final String CSV_FULL_KEY = "scale, blink, " + CSV_KEY;
 	public static final FullLogoConfig DEFAULT = new FullLogoConfig(
 			20, true,
 			new ImmutableAssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.NORMAL, null),
@@ -18,34 +17,47 @@ public class Parser {
 	);
 	//} Fields
 	
-	//Constructor {
-	public Parser() {
-		
-	}
-	//} Constructor
-	
 	//Methods {
-	private static FullLogoConfig parseFullLogo(String entry) {
-		String[] arr = entry.split(", ", 3);
-		RegionEnum[] regs = RegionEnum.values();
-		int scale = parseScaleOrFullscreen(arr[0], DEFAULT.scale);
-		boolean blink = parseBlink(arr[1], DEFAULT.blink);
-		return new FullLogoConfig(scale, blink, parseLogo(arr[2]));
+	public static LogoConfig parseLogo(String string, LogoConfig def) {
+		if (string == null || string.isBlank() || string.contentEquals(NULL)) return parseLogo(null, null, def);
+		return parseLogo(string.split(" "), def);
 	}
 	
-	private static LogoConfig parseLogo(String entry) {
-		String[] arr = entry.split(", ");
-		int iArr = 0;
+	public static LogoConfig parseLogo(String[] assetsMoods, LogoConfig def) {
+		if (assetsMoods == null) return parseLogo(null, null, def);
+		int l = RegionEnum.values().length;
+		if (assetsMoods.length <= l) {
+			return parseLogo(assetsMoods, null, def);
+		} else {
+			String[] assets = Arrays.copyOfRange(assetsMoods, 0, l);
+			String[] moods = Arrays.copyOfRange(assetsMoods, l, l * 2);
+			return parseLogo(assets, moods, def);
+		}
+	}
+	
+	public static LogoConfig parseLogo(String[] assets, String[]moods, LogoConfig def) {
 		RegionEnum[] regs = RegionEnum.values();
-		AssetProvider assets = new AssetProvider.Default();
-		MoodProvider moods = new MoodProvider.Default();
-		for (RegionEnum reg : regs) {
-			assets.setAsset(reg, parseAsset(arr[iArr++], reg.type, DEFAULT.getAsset(reg)));
+		int l = regs.length;
+		if (assets != null) {
+			if (assets.length != l) assets = Arrays.copyOf(assets, l);
+		} else {
+			assets = new String[l];
 		}
-		for (RegionEnum reg : regs) {
-			moods.setMood(reg, parseMood(arr[iArr++], DEFAULT.getMood(reg)));
+		if (moods != null) {
+			if (moods.length != l) moods = Arrays.copyOf(moods, l);
+		} else {
+			moods = new String[l];
 		}
-		return new LogoConfig(new ImmutableAssetProvider.Default(assets), new ImmutableMoodProvider.Default(moods));
+		if (def == null) def = new LogoConfig();
+		AssetProvider aProv = new AssetProvider.Default();
+		MoodProvider mProv = new MoodProvider.Default();
+		for (int i = 0; i < l; i++) {
+			aProv.setAsset(regs[i], parseAsset(assets[i], regs[i].type, def.getAsset(regs[i])));
+		}
+		for (int i = 0; i < l; i++) {
+			mProv.setMood(regs[i], parseMood(moods[i], def.getMood(regs[i])));
+		}
+		return new LogoConfig(aProv, mProv);
 	}
 	
 	public static MoodEnum parseMood(String string, MoodEnum def) {
