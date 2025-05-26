@@ -12,8 +12,9 @@ public class ClientConnectorFrame extends JFrame {
 	public ClientConnectorFrame(DisplayFrame logo) throws HeadlessException {
 		super("Client Connector");
 		connector = new ClientConnector(logo);
-		setResizable(false);
-		setSize(300,90);
+		setResizable(true);
+		setMinimumSize(new Dimension(300,110));
+		setSize(350,110);
 		setLocationRelativeTo(logo);
 		setContentPane(connector);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
