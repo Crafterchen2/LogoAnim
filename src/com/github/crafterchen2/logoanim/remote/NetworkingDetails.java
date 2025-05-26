@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class NetworkingDetails {
 
-	public static final int VERSION = 1;
+	public static final int VERSION = 2;
+	@Deprecated(forRemoval = true)
 	public static final int PORT = 7777;
 	private static final ArrayList<String> whitelist = new ArrayList<>();
 	
