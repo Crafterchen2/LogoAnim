@@ -43,7 +43,7 @@ public class JavaFxWrapper {
 	}
 	
 	public boolean getChatVisible() {
-		return chatVisible;
+		return chatVisible && getVideoID() != null;
 	}
 	
 	public String getChatURL() {
@@ -67,7 +67,6 @@ public class JavaFxWrapper {
 				//Overrides {
 				@Override
 				public void windowClosed(WindowEvent e) {
-					chatVisible = false;
 					chatControlFrame = null;
 				}
 				//} Overrides
@@ -108,22 +107,29 @@ public class JavaFxWrapper {
 			JTextField input = new JTextField(wrapper.getVideoID());
 			JPanel buttons = new JPanel(new GridLayout(1, 0));
 			{
-				JToggleButton active = new JToggleButton(wrapper.getChatVisible() ? "Hide Chat" : "Show Chat");
+				JButton active = new JButton(wrapper.getChatVisible() ? "Hide" : "Show");
 				JButton refresh = new JButton("Refresh");
-				JButton update = new JButton("Update Chat");
+				JButton update = new JButton("Update");
+				active.setEnabled(wrapper.getVideoID() != null);
 				active.addActionListener(_ -> {
-					boolean a = !active.isSelected();
-					active.setText(a ? "Hide Chat" : "Show Chat");
+					boolean a = !wrapper.getChatVisible();
+					active.setText(a ? "Hide" : "Show");
 					wrapper.setChatVisible(a);
-					refresh.setEnabled(a);
-					update.setEnabled(a);
 				});
-				refresh.addActionListener(_ -> input.setText(wrapper.getVideoID()));
+				refresh.addActionListener(_ -> {
+					String id = wrapper.getVideoID();
+					input.setText((id != null) ? id : "");
+					active.setEnabled(wrapper.getVideoID() != null);
+					active.setText(wrapper.getChatVisible() ? "Hide " : "Show");
+				});
 				update.addActionListener(_ -> {
 					String text = input.getText();
 					if (!text.matches(".*[A-Za-z0-9_-]{11}$")) return;
 					text = text.replaceFirst(".*(?=[A-Za-z0-9_-]{11}$)", "");
 					wrapper.setVideoID(text);
+					wrapper.setChatVisible(true);
+					active.setText("Hide");
+					active.setEnabled(true);
 				});
 				buttons.add(active);
 				buttons.add(refresh);
