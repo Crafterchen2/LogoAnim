@@ -48,10 +48,6 @@ public class StreamFrame extends DisplayFrame {
 			}
 			contentPane.add(logos, RootLayout.LOGO);
 			JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-			//TODO: remove
-			wrapper.setVideoID("EXH4bYvCnHs");
-			wrapper.setChatVisible(true);
-			//remove end
 			contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
 			wrapper.setControlVisibility(true);
 		}
