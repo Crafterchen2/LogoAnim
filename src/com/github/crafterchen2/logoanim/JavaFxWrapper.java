@@ -9,15 +9,13 @@ import javafx.scene.web.WebView;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.net.URL;
 
 //Classes {
 public class JavaFxWrapper {
 	
 	//Fields {	
-	private static ChatControlFrame chatControlFrame = null;
+	private static ChatControl chatControl = null;
 	private static JavaFxWrapper singleton = null;
 	private final JFXPanel chatPanel;
 	private final FxThread fx = new FxThread();
@@ -38,6 +36,11 @@ public class JavaFxWrapper {
 		return singleton;
 	}
 	
+	public JPanel getChatControlPanel() {
+		if (chatControl == null) chatControl = new ChatControl();
+		return chatControl;
+	} 
+	
 	public JComponent getChatPanel() {
 		return chatPanel;
 	}
@@ -53,28 +56,9 @@ public class JavaFxWrapper {
 	public String getVideoID() {
 		return fx.getVideoID();
 	}
-	
-	public boolean getControlVisibility() {
-		return chatControlFrame != null && chatControlFrame.isVisible();
-	}
 	//} Getter
 	
 	//Setter {
-	public void setControlVisibility(boolean visibility) {
-		if (visibility && chatControlFrame == null) {
-			chatControlFrame = new ChatControlFrame();
-			chatControlFrame.addWindowListener(new WindowAdapter() {
-				//Overrides {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					chatControlFrame = null;
-				}
-				//} Overrides
-			});
-		}
-		chatControlFrame.setVisible(visibility);
-	}
-	
 	public void setChatVisible(boolean chatVisible) {
 		this.chatVisible = chatVisible;
 		chatPanel.setVisible(this.chatVisible && fx.getVideoID() != null);
@@ -93,16 +77,11 @@ public class JavaFxWrapper {
 	//} Setter
 	
 	//Classes {
-	private static class ChatControlFrame extends JFrame {
+	private static class ChatControl extends JPanel {
 		
 		//Constructor {
-		private ChatControlFrame() throws HeadlessException {
-			super("Youtube Chat Control");
-			setSize(300, 90);
-			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-			setLocationRelativeTo(null);
-			setResizable(false);
-			setLayout(new BorderLayout());
+		private ChatControl() throws HeadlessException {
+			super(new BorderLayout());
 			JavaFxWrapper wrapper = getWrapper();
 			JTextField input = new JTextField(wrapper.getVideoID());
 			JPanel buttons = new JPanel(new GridLayout(1, 0));
@@ -137,8 +116,6 @@ public class JavaFxWrapper {
 			}
 			add(buttons, BorderLayout.NORTH);
 			add(input, BorderLayout.CENTER);
-			DisplayFrame.loadFrameIcon(this, "youtube_chat_control_frame_icon");
-			setVisible(true);
 		}
 		//} Constructor
 	}

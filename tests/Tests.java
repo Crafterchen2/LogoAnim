@@ -56,8 +56,7 @@ public class Tests {
 	}
 	
 	private static void streamFrameTest(){
-		StreamFrame f = new StreamFrame(false);
-		
+		StreamFrame f = new StreamFrame();
 	}
 	
 	private static void streamFrameConceptTest() {

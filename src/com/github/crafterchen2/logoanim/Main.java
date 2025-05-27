@@ -63,9 +63,10 @@ public class Main {
 			launchRemoteOnly(leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood, blink);
 			return;
 		}
-		final DisplayFrame l;
+		DisplayFrame l;
 		if (scale <= FULLSCREEN) {
-			l = new StreamFrame(scale == FULLSCREEN);
+			new StreamFrame();
+			return;
 		} else {
 			l = new LogoFrame();
 			l.setScale(scale);
