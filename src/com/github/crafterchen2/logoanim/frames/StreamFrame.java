@@ -162,7 +162,7 @@ public class StreamFrame extends DisplayFrame {
 	
 	@Override
 	public int getMinScale() {
-		return 4;
+		return 1;
 	}
 	//} Overrides
 	
