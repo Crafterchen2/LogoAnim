@@ -74,6 +74,10 @@ public class JavaFxWrapper {
 			}
 		});
 	}
+	
+	public void paintChatPanel(Graphics g) {
+		if (chatVisible) chatPanel.paint(g);
+	}
 	//} Setter
 	
 	//Classes {
