@@ -25,6 +25,8 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 	public LogoDisplay(AssetProvider defAssets, MoodProvider defMoods) {
 		painter = new LogoPainter(defAssets, defMoods);
 		setDoubleBuffered(true);
+		setBackground(new Color(0,0,0));
+		setOpaque(true);
 	}
 	//} Constructor
 	
@@ -32,6 +34,8 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 	@Override
 	protected void paintComponent(Graphics g) {
 		painter.blink = blink;
+		Color background = getBackground();
+		if (background != null) g.setColor(background);
 		painter.paint(g, getWidth(), getHeight());
 	}
 	
