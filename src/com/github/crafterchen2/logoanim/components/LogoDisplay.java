@@ -35,7 +35,10 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 	protected void paintComponent(Graphics g) {
 		painter.blink = blink;
 		Color background = getBackground();
-		if (background != null) g.setColor(background);
+		if (background != null) {
+			g.setColor(background);
+			g.fillRect(0, 0, getWidth(), getHeight());
+		}
 		painter.paint(g, getWidth(), getHeight());
 	}
 	

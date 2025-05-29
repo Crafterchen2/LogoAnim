@@ -33,8 +33,7 @@ public class LogoPainter implements AssetProvider, MoodProvider {
 	
 	public void paint(Graphics g, int x, int y, int w, int h) {
 		if (w <= 0 && h <= 0) return;
-		g.setClip(x, y, w, h);
-		g.fillRect(x, y, w, h);
+		g = g.create(x,y,w,h);
 		RegionEnum[] regs = RegionEnum.values();
 		for (int i = regs.length - 1; i >= 0; i--) {
 			if (regs[i].type == AssetType.EYE && blink) continue;
