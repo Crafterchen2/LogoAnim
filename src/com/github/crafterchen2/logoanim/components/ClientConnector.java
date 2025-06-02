@@ -74,13 +74,26 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	public void connect() {
 		if (isConnected()) return;
 		try {
-			//Regex only checks the following:
-			// * String has 1 of ':'
-			// * String has at least 1 digit behind ':'
-			// * No other characters than digits between ':' and end of string
-			//Everything else should be checked in parsePort(String port) for proper error handling.
-			//IMPROVEME: Regex accepts also when multiple ":" are present, should only do that when those ":" are surrounded by "[" and "]".
-			String[] parts = ip.getText().split(":(?=\\d+$)", 2);
+			String ipPort = ip.getText();
+			String[] parts;
+			// Regex only checks the following:
+			// * String has exactly 1 of ':' somewhere
+			if (ipPort.matches("[^:]*:[^:]*")) {
+				// We only have 1 ':' somewhere
+				// Regex only checks the following:
+				// * String has 1 of ':'
+				// * String has at least 1 digit behind ':'
+				// * No other characters than digits between ':' and end of string
+				parts = ipPort.split(":(?=\\d+$)", 2);
+			} else {
+				// We have at least 2 ':' somewhere
+				// Regex only checks the following:
+				// * String has 1 of "]:"
+				// * String has at least 1 digit behind "]:"
+				// * No other characters than digits between "]:" and end of string
+				parts = ipPort.split("]:(?=\\d+$)", 2);
+				if (!parts[0].isEmpty() && parts[0].charAt(0) == '[') parts[0] = parts[0].substring(1);
+			}
 			String a = alias.getText();
 			if (a.isBlank()) {
 				status.setText("Status: ❌ No alias");
