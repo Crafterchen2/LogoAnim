@@ -2,23 +2,39 @@ package com.github.crafterchen2.logoanim.frames;
 
 import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.*;
+import org.bytedeco.javacv.*;
+import org.bytedeco.javacv.Frame;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.bytedeco.ffmpeg.global.avcodec.*;
+import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_ARGB;
 
 //Classes {
 public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	//Fields {
-	public static final int MANAGER_PADDING = 10;
-	public static final int STREAM_RES_HEIGHT = 1080;
 	public static final int STREAM_RES_WIDTH = 1920;
-	public static final int STREAM_FPS = 60;
+	public static final int STREAM_RES_HEIGHT = 1080;
+	public static final int CAPTURE_RES_WIDTH = 3840;
+	public static final int CAPTURE_RES_HEIGHT = 2160;
+	public static final int PREVIEW_FPS = 60;
+	public static final int REC_FPS = 60;
+	public static final int SAMPLE_RATE = 48_000;
+	public static final int AUDIO_CHANNELS = 2;
+	public static final int AUDIO_BITRATE = 160_000;
+	public static final int VIDEO_BITRATE = 51000_000;
+	public static final int VIDEO_CODEC = AV_CODEC_ID_H264;
+	public static final int AUDIO_CODEC = AV_CODEC_ID_AAC;
+	public static final long REC_MILLIS;
+	public static final long PREVIEW_MILLIS;
+	public static final int PREVIEW_MIN_WIDTH;
+	public static final int PREVIEW_MIN_HEIGHT;
 	public static final int SCALE;
 	public static final int CAP_X;
 	public static final int CAP_Y;
@@ -39,8 +55,15 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	private static final BufferedImage bgImg;
 	
-	private final LogoDisplay display;
-	private final JPanel background = makeBackgroundPane();
+	private final LogoPainter display;
+	private final JPanel preview = makePreviewPanel();
+	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
+	private final FFmpegFrameGrabber screenGrabber = new FFmpegFrameGrabber("desktop");
+	private FFmpegFrameRecorder screenRecorder;
+	private Thread streamThread;
+	private boolean repaintLogo = true;
+	private boolean record = false;
+	private final JLabel fpsLabel = new JLabel("frameDelta: -");
 	//} Fields
 	
 	//Constructor {
@@ -96,14 +119,16 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					g.dispose();
 				}
 			}
+			PREVIEW_MIN_WIDTH = temp.getWidth();
+			PREVIEW_MIN_HEIGHT = temp.getHeight();
 			bgImg = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
 			{
 				Graphics g = bgImg.getGraphics();
 				g.drawImage(temp, 0, 0, STREAM_RES_WIDTH, STREAM_RES_HEIGHT, null);
 				g.dispose();
 			}
-			SCALE = STREAM_RES_HEIGHT / temp.getHeight();
 		}
+		SCALE = STREAM_RES_WIDTH / PREVIEW_MIN_WIDTH;
 		CAP_X = SCALE * capX;
 		CAP_Y = SCALE * capY;
 		CAP_W = SCALE * capW;
@@ -120,6 +145,8 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		INFO_Y = SCALE * infoY;
 		INFO_W = SCALE * infoW;
 		INFO_H = SCALE * infoH;
+		PREVIEW_MILLIS = (long) ((1.0 / (double) PREVIEW_FPS) * 1000.0);
+		REC_MILLIS = (long) ((1.0 / (double) REC_FPS) * 1000.0);
 	}
 	
 	public StreamFrame() throws HeadlessException {
@@ -128,17 +155,29 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	
 	public StreamFrame(AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
 		super("Stream Manager");
-		setSize(2304, 1296);
-		setLocation(100,100);
+		int initFrameWidth = 1600;
+		int initFrameHeight = 900;
+		setSize(initFrameWidth, initFrameHeight);
+		setLocation(100, 100);
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		display = new LogoDisplay(defAssets, defMoods);
+		screenGrabber.setFrameRate(REC_FPS);
+		screenGrabber.setImageWidth(CAPTURE_RES_WIDTH);
+		screenGrabber.setImageHeight(CAPTURE_RES_HEIGHT);
+		screenGrabber.setAudioChannels(AUDIO_CHANNELS);
+		screenGrabber.setAudioBitrate(AUDIO_BITRATE);
+		screenGrabber.setAudioCodec(AUDIO_CODEC);
+		screenGrabber.setVideoCodec(VIDEO_CODEC);
+		screenGrabber.setSampleRate(SAMPLE_RATE);
+		screenGrabber.setFormat("gdigrab");
+		screenGrabber.setVideoCodecName("h264_amf");
+		display = new LogoPainter(defAssets, defMoods);
 		final Timer blinkTimer = new Timer(5000, _ -> {
 			display.blink = true;
-			display.repaint();
+			repaintLogo = true;
 			Timer minor = new Timer(300, _ -> {
 				display.blink = false;
-				repaint();
+				repaintLogo = true;
 			}
 			);
 			minor.setRepeats(false);
@@ -147,107 +186,207 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		);
 		blinkTimer.setRepeats(true);
 		blinkTimer.start();
-		JPanel root = new JPanel(new RootLayout());
+		JSplitPane root = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
 		{
-			JPanel logos = new JPanel(new LogoLayout());
+			root.setDividerLocation(initFrameWidth - 300);
+			JSplitPane minor = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true);
 			{
-				logos.add(display);
-			}
-			logos.setBounds(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
-			background.add(logos);
-			JComponent chat = JavaFxWrapper.getWrapper().getChatPanel();
-			chat.setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
-			background.add(chat);
-			JButton info = new JButton("Info Placeholder");
-			info.setBounds(INFO_X, INFO_Y, INFO_W, INFO_H);
-			background.add(info);
-		}
-		root.add(background, RootLayout.STREAM);
-		JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.WRAP_TAB_LAYOUT);
-		{
-			JPanel lc = new JPanel(new BorderLayout(0,5));
-			{
-				JCheckBox blinkBox = new JCheckBox("Enable blinking");
+				minor.setDividerLocation(initFrameHeight - 300);
+				JPanel ratioCenter = new JPanel(new RatioLayout(PREVIEW_MIN_WIDTH, PREVIEW_MIN_HEIGHT));
 				{
-					blinkBox.setSelected(true);
-					blinkBox.setBorder(BorderFactory.createLoweredBevelBorder());
-					blinkBox.setBorderPainted(true);
-					blinkBox.addActionListener(_ -> {
-						if (blinkBox.isSelected()) {
-							blinkTimer.restart();
-						} else {
-							blinkTimer.stop();
-							display.blink = false;
-							display.repaint();
-						}
-					});
+					ratioCenter.add(preview);
 				}
-				lc.add(blinkBox, BorderLayout.NORTH);
-				JPanel big = new JPanel(new GridLayout(3,1,0,5));
-				{
-					AtomicBoolean ignoreListener = new AtomicBoolean(false);
-					PresetLibrary presetLibrary = new PresetLibrary(display, display);
-					AssetSelector assetSelector = new AssetSelector(display);
-					MoodSelector moodSelector = new MoodSelector();
-					assetSelector.addAssetChangedListener(() -> {
-						if (ignoreListener.get()) return;
-						for (RegionEnum reg : RegionEnum.values()) {
-							display.setAsset(reg, assetSelector.getAsset(reg));
-						}
-						display.repaint();
-					});
-					moodSelector.addMoodChangedListener(() -> {
-						if (ignoreListener.get()) return;
-						for (RegionEnum reg : RegionEnum.values()) {
-							display.setMood(reg, moodSelector.getMood(reg));
-						}
-						display.repaint();
-						assetSelector.repaint();
-					});
-					presetLibrary.addMoodChangedListener(() -> {
-						ignoreListener.set(true);
-						for (RegionEnum reg : RegionEnum.values()) {
-							moodSelector.setMood(reg, display.getMood(reg));
-							assetSelector.setAsset(reg, display.getAsset(reg));
-						}
-						display.repaint();
-						ignoreListener.set(false);
-					});
-					presetLibrary.setBorder(BorderFactory.createLoweredBevelBorder());
-					assetSelector.setBorder(BorderFactory.createLoweredBevelBorder());
-					moodSelector.setBorder(BorderFactory.createLoweredBevelBorder());
-					big.add(presetLibrary);
-					big.add(assetSelector);
-					big.add(moodSelector);
-				}
-				lc.add(big, BorderLayout.CENTER);
+				minor.setTopComponent(ratioCenter);
+				minor.setBottomComponent(fpsLabel);
 			}
-			tabs.addTab("Logo", lc);
-			JPanel sc = new JPanel(new BorderLayout(0,5));
+			root.setLeftComponent(minor);
+			JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.WRAP_TAB_LAYOUT);
 			{
-				JPanel chatControlPanel = JavaFxWrapper.getWrapper().getChatControlPanel();
-				chatControlPanel.setBorder(BorderFactory.createLoweredBevelBorder());
-				sc.add(chatControlPanel, BorderLayout.NORTH);
+				JPanel lc = new JPanel(new BorderLayout(0, 5));
+				{
+					JCheckBox blinkBox = new JCheckBox("Enable blinking");
+					{
+						blinkBox.setSelected(true);
+						blinkBox.setBorder(BorderFactory.createLoweredBevelBorder());
+						blinkBox.setBorderPainted(true);
+						blinkBox.addActionListener(_ -> {
+							if (blinkBox.isSelected()) {
+								blinkTimer.restart();
+							} else {
+								blinkTimer.stop();
+								display.blink = false;
+								repaintLogo = true;
+							}
+						});
+					}
+					lc.add(blinkBox, BorderLayout.NORTH);
+					JPanel big = new JPanel(new GridLayout(3, 1, 0, 5));
+					{
+						AtomicBoolean ignoreListener = new AtomicBoolean(false);
+						PresetLibrary presetLibrary = new PresetLibrary(display, display);
+						AssetSelector assetSelector = new AssetSelector(display);
+						MoodSelector moodSelector = new MoodSelector();
+						assetSelector.addAssetChangedListener(() -> {
+							if (ignoreListener.get()) return;
+							for (RegionEnum reg : RegionEnum.values()) {
+								display.setAsset(reg, assetSelector.getAsset(reg));
+							}
+							repaintLogo = true;
+						});
+						moodSelector.addMoodChangedListener(() -> {
+							if (ignoreListener.get()) return;
+							for (RegionEnum reg : RegionEnum.values()) {
+								display.setMood(reg, moodSelector.getMood(reg));
+							}
+							assetSelector.repaint();
+							repaintLogo = true;
+						});
+						presetLibrary.addMoodChangedListener(() -> {
+							ignoreListener.set(true);
+							for (RegionEnum reg : RegionEnum.values()) {
+								moodSelector.setMood(reg, display.getMood(reg));
+								assetSelector.setAsset(reg, display.getAsset(reg));
+							}
+							ignoreListener.set(false);
+							repaintLogo = true;
+						});
+						presetLibrary.setBorder(BorderFactory.createLoweredBevelBorder());
+						assetSelector.setBorder(BorderFactory.createLoweredBevelBorder());
+						moodSelector.setBorder(BorderFactory.createLoweredBevelBorder());
+						big.add(presetLibrary);
+						big.add(assetSelector);
+						big.add(moodSelector);
+					}
+					lc.add(big, BorderLayout.CENTER);
+				}
+				tabs.addTab("Logo", lc);
+				JPanel sc = new JPanel(new BorderLayout(0, 5));
+				{
+					JPanel chatControlPanel = JavaFxWrapper.getWrapper().getChatControlPanel();
+					chatControlPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+					sc.add(chatControlPanel, BorderLayout.NORTH);
+					JButton starter = new JButton("Start");
+					starter.addActionListener(_ -> startRecording());
+					sc.add(starter, BorderLayout.CENTER);
+					JButton stopper = new JButton("Stop");
+					stopper.addActionListener(_ -> stopRecording());
+					sc.add(stopper, BorderLayout.SOUTH);
+				}
+				tabs.addTab("Stream", sc);
+				tabs.addTab("Remote", new JButton("Remote Control"));
 			}
-			tabs.addTab("Stream", sc);
-			tabs.addTab("Remote", new JButton("Remote Control"));
+			root.setRightComponent(tabs);
 		}
-		root.add(tabs, RootLayout.TABS);
-		root.add(new JButton("south"), RootLayout.SOUTH);
 		setContentPane(root);
 		DisplayFrame.loadFrameIcon(this, "streaming_frame_icon");
 		setVisible(true);
-		repaint();
+		JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+		wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
+		Graphics g = streamCanvas.getGraphics();
+		g.drawImage(bgImg,0,0,null);
+		Thread previewLoop = new Thread(() -> {
+			boolean fine = true;
+			while (fine) {
+				preview.repaint();
+				try {
+					Thread.sleep(PREVIEW_MILLIS);
+				} catch (InterruptedException _) {
+					fine = false;
+				}
+			}
+		}, "previewLoop");
+		previewLoop.start();
 	}
 	//} Constructor
 	
 	//Methods {
-	private JPanel makeBackgroundPane() {
+	private void startRecording() {
+		if (record) return;
+		record = true;
+		final boolean[] fine = {true};
+		try {
+			screenRecorder = FFmpegFrameRecorder.createDefault(System.currentTimeMillis() + ".avi", STREAM_RES_WIDTH, STREAM_RES_HEIGHT);
+			screenRecorder.setFrameRate(REC_FPS);
+			screenRecorder.setAudioChannels(AUDIO_CHANNELS);
+			screenRecorder.setAudioBitrate(AUDIO_BITRATE);
+			screenRecorder.setAudioCodec(AUDIO_CODEC);
+			screenRecorder.setVideoBitrate(VIDEO_BITRATE);
+			screenRecorder.setVideoCodec(VIDEO_CODEC);
+			screenRecorder.setSampleRate(SAMPLE_RATE);
+			screenRecorder.setVideoCodecName("h264_amf");
+			streamThread = new Thread(() -> {
+				try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
+					Graphics g = streamCanvas.getGraphics();
+					g.drawImage(bgImg,0,0,null);
+					screenGrabber.start();
+					screenRecorder.start();
+					Frame grab;
+					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+					wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
+					long sleepTime;
+					while ((grab = screenGrabber.grab()) != null && fine[0] && record) {
+						sleepTime = System.currentTimeMillis();
+						g.create(CAP_X, CAP_Y, CAP_W, CAP_H).drawImage(converter.convert(grab),0,0, CAP_W, CAP_H, null);
+						wrapper.paintChatPanel(g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H));
+						g.setColor(new Color(29,31,33));
+						if (repaintLogo) {
+							g.fillRect(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+							display.paint(g, LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+							repaintLogo = false;
+						}
+						Frame toRecord = converter.convert(streamCanvas);
+						toRecord.samples = grab.samples;
+						toRecord.timestamp = grab.timestamp;
+						toRecord.audioChannels = grab.audioChannels;
+						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
+						long frameDelta = System.currentTimeMillis() - sleepTime;
+						fpsLabel.setText("frameDelta: " + frameDelta);
+						sleepTime = REC_MILLIS - frameDelta;
+						if (sleepTime > 0) Thread.sleep(sleepTime);
+					}
+					g.dispose();
+				} catch (Exception e) {
+					fine[0] = false;
+					e.printStackTrace();
+				}
+			}, "streamThread");
+			streamThread.start();
+		} catch (Exception _) {
+			fine[0] = false;
+		}
+	}
+	
+	private void stopRecording() {
+		if (!record) return;
+		record = false;
+		while (streamThread.isAlive()) {}
+		try {
+			if (screenRecorder != null) {
+				screenRecorder.stop();
+				screenRecorder.release();
+				screenRecorder = null;
+			}
+			screenGrabber.stop();
+			screenGrabber.release();
+			if (streamThread != null) {
+				streamThread.interrupt();
+				streamThread = null;
+			}
+		} catch (Exception e) {
+			System.err.println("Error while stopping:");
+			e.printStackTrace();
+		}
+		Graphics g = streamCanvas.getGraphics();
+		g.drawImage(bgImg,0,0,null);
+		System.gc();
+	}
+	
+	private JPanel makePreviewPanel() {
 		return new JPanel(null,true) {
 			//Overrides {
 			@Override
 			protected void paintComponent(Graphics g) {
-				g.drawImage(bgImg, 0,0, null);
+				g.drawImage(streamCanvas, 0,0, getWidth(), getHeight(), null);
 			}
 			//} Overrides
 		};
@@ -274,71 +413,76 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	public MoodEnum getMood(RegionEnum reg) {
 		return display.getMood(reg);
 	}
+	
+	@Override
+	public void dispose() {
+		stopRecording();
+		super.dispose();
+	}
 	//} Overrides
 	
 	//Classes {
-	private class RootLayout implements LayoutManager {
+	private static class RatioLayout implements LayoutManager {
 		
-		//Fields {
-		public static final String STREAM = "stream";
-		public static final String SOUTH = "south";
-		public static final String TABS = "tabs";
+		private final int ratioWidth, ratioHeight, minWidth, minHeight;
 		
-		private final HashMap<Component, String> map = HashMap.newHashMap(2);
-		private final int left;
-		private final int right;
-		private final int top;
-		private final int bottom;
-		
-		//} Fields
-		
-		public RootLayout() {
-			Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
-			left = screenInsets.left;
-			right = screenInsets.right;
-			top = screenInsets.top;
-			bottom = screenInsets.bottom;
+		public RatioLayout(int minWidth, int minHeight) {
+			int ggt = ggt(minWidth, minHeight);
+			ratioWidth = minWidth / ggt;
+			ratioHeight = minHeight / ggt;
+			this.minWidth = minWidth;
+			this.minHeight = minHeight;
 		}
 		
-		//Overrides {
+		private static int ggt(int a, int b) {
+			while (b != 0) {
+				int h = a % b;
+				a = b;
+				b = h;
+			}
+			return a;
+		}
+		
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-			if (name == null || (!name.equals(STREAM) && !name.equals(SOUTH) && !name.equals(TABS))) throw new IllegalArgumentException("Illegal key for layout");
-			map.put(comp, name);
+			
 		}
 		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-			map.remove(comp);
+			
 		}
 		
 		@Override
 		public Dimension preferredLayoutSize(Container parent) {
-			return null;
+			int w = parent.getWidth();
+			int h = parent.getHeight();
+			w -= w % ratioWidth;
+			h -= h % ratioHeight;
+			int nw = (h * ratioWidth) / ratioHeight;
+			int nh = (w * ratioHeight) / ratioWidth;
+			if (nw > w) {
+				h = nh;
+			} else {
+				w = nw;
+			}
+			return new Dimension(Math.max(w, minWidth), Math.max(h, minHeight));
 		}
 		
 		@Override
 		public Dimension minimumLayoutSize(Container parent) {
-			return new Dimension(getWidth(), getHeight());
+			return new Dimension(minWidth, minHeight);
 		}
 		
 		@Override
 		public void layoutContainer(Container parent) {
-			synchronized (parent.getTreeLock()) {
-				for (Component c : parent.getComponents()) {
-					String v = map.get(c);
-					if (v == null) continue;
-					switch (v) {
-						case STREAM -> c.setBounds(MANAGER_PADDING + left, MANAGER_PADDING + top, STREAM_RES_WIDTH, STREAM_RES_HEIGHT);
-						case SOUTH -> c.setBounds(MANAGER_PADDING + left, STREAM_RES_HEIGHT + MANAGER_PADDING * 2 + top, STREAM_RES_WIDTH, getHeight() - (MANAGER_PADDING * 3 + STREAM_RES_HEIGHT + top + bottom));
-						case TABS -> c.setBounds((MANAGER_PADDING * 2) + STREAM_RES_WIDTH + left, MANAGER_PADDING + top, getWidth() - (MANAGER_PADDING * 3 + STREAM_RES_WIDTH + left + right + 16), getHeight() - (MANAGER_PADDING * 2 + top + bottom));
-						default -> System.out.println("ignoring component: " + c.toString());
-					}
-				}
-			}
+			Component[] cs = parent.getComponents();
+			if (cs.length < 1) return;
+			Dimension size = preferredLayoutSize(parent);
+			int x = parent.getWidth() / 2 - size.width / 2;
+			int y = parent.getHeight() / 2 - size.height / 2;
+			cs[0].setBounds(x, y, size.width, size.height);
 		}
-		//} Overrides
-		
 	}
 	
 	private static class LogoLayout implements LayoutManager {
