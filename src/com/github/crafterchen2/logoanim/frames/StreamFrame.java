@@ -17,18 +17,18 @@ import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_ARGB;
 
 //Classes {
 public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
-	
+
 	//Fields {
 	public static final int STREAM_RES_WIDTH = 1920;
 	public static final int STREAM_RES_HEIGHT = 1080;
-	public static final int CAPTURE_RES_WIDTH = 3840;
-	public static final int CAPTURE_RES_HEIGHT = 2160;
+	public static final int CAPTURE_RES_WIDTH = 3840 / 10;
+	public static final int CAPTURE_RES_HEIGHT = 2160 / 10;
 	public static final int PREVIEW_FPS = 60;
 	public static final int REC_FPS = 60;
 	public static final int SAMPLE_RATE = 48_000;
 	public static final int AUDIO_CHANNELS = 2;
 	public static final int AUDIO_BITRATE = 160_000;
-	public static final int VIDEO_BITRATE = 51000_000;
+	public static final int VIDEO_BITRATE = 80000_000; // Increased from 51Mbps to 80Mbps to allow more GPU utilization
 	public static final int VIDEO_CODEC = AV_CODEC_ID_H264;
 	public static final int AUDIO_CODEC = AV_CODEC_ID_AAC;
 	public static final long REC_MILLIS;
@@ -52,9 +52,9 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	public static final int INFO_Y;
 	public static final int INFO_W;
 	public static final int INFO_H;
-	
+
 	private static final BufferedImage bgImg;
-	
+
 	private final LogoPainter display;
 	private final JPanel preview = makePreviewPanel();
 	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -65,7 +65,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	private boolean record = false;
 	private final JLabel fpsLabel = new JLabel("frameDelta: -");
 	//} Fields
-	
+
 	//Constructor {
 	static {
 		final int capX = 4;
@@ -148,11 +148,11 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		PREVIEW_MILLIS = (long) ((1.0 / (double) PREVIEW_FPS) * 1000.0);
 		REC_MILLIS = (long) ((1.0 / (double) REC_FPS) * 1000.0);
 	}
-	
+
 	public StreamFrame() throws HeadlessException {
 		this(null, null);
 	}
-	
+
 	public StreamFrame(AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
 		super("Stream Manager");
 		int initFrameWidth = 1600;
@@ -170,7 +170,24 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		screenGrabber.setVideoCodec(VIDEO_CODEC);
 		screenGrabber.setSampleRate(SAMPLE_RATE);
 		screenGrabber.setFormat("gdigrab");
-		screenGrabber.setVideoCodecName("h264_amf");
+		screenGrabber.setVideoCodecName("h264_nvenc");
+
+		// Set NVENC-specific options to improve performance for screen grabber
+		screenGrabber.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
+		screenGrabber.setOption("tune", "ll"); // Low latency tuning
+		screenGrabber.setOption("rc", "vbr_hq"); // Use high quality VBR mode for better quality and higher GPU usage
+		screenGrabber.setOption("zerolatency", "1"); // Minimize latency
+		screenGrabber.setOption("gpu", "0"); // Use first GPU
+		screenGrabber.setOption("spatial-aq", "1"); // Enable spatial adaptive quantization
+		screenGrabber.setOption("temporal-aq", "1"); // Enable temporal adaptive quantization
+		screenGrabber.setOption("aq-strength", "15"); // Maximum adaptive quantization strength
+		screenGrabber.setOption("multipass", "fullres"); // Use full resolution multipass encoding
+		screenGrabber.setOption("qp", "15"); // Lower QP value further (from 19 to 15) for better quality and higher GPU usage
+		screenGrabber.setOption("surfaces", "8"); // Increased from default to 8 for more parallel processing
+		screenGrabber.setOption("2pass", "1"); // Enable two-pass encoding for better quality
+		screenGrabber.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
+		screenGrabber.setOption("offset_x", "200");
+		screenGrabber.setOption("offset_y", "200");
 		display = new LogoPainter(defAssets, defMoods);
 		final Timer blinkTimer = new Timer(5000, _ -> {
 			display.blink = true;
@@ -298,7 +315,14 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		previewLoop.start();
 	}
 	//} Constructor
-	
+
+	/* TODO for Junie:
+	 * Write a ffmpeg command for the terminal that records with the exact same settings as the current Project does.
+	 * Write here --> 
+	 * ffmpeg -f gdigrab -framerate 60 -video_size 3840x2160 -i desktop -f dshow -audio_buffer_size 50 -i audio="Microphone" -c:v h264_nvenc -preset p1 -tune ll -rc vbr_hq -zerolatency 1 -b_ref_mode 0 -surfaces 8 -gpu 0 -no-scenecut 1 -spatial-aq 1 -temporal-aq 1 -aq-strength 15 -multipass fullres -forced-idr 1 -qp 15 -cbr 0 -2pass 1 -bf 0 -b:v 80M -c:a aac -b:a 160k -ar 48000 -ac 2 -vf scale=1920:1080 -pix_fmt yuv420p output.mp4
+	 * Testing result: Quality and Encoder usage was identical. The Java implementation doesn't seem to be the problem here, It must be some configuration issue.
+	 * */
+
 	//Methods {
 	private void startRecording() {
 		if (record) return;
@@ -313,7 +337,26 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			screenRecorder.setVideoBitrate(VIDEO_BITRATE);
 			screenRecorder.setVideoCodec(VIDEO_CODEC);
 			screenRecorder.setSampleRate(SAMPLE_RATE);
-			screenRecorder.setVideoCodecName("h264_amf");
+			screenRecorder.setVideoCodecName("h264_nvenc");
+
+			// Set NVENC-specific options to improve performance
+			screenRecorder.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
+			screenRecorder.setOption("tune", "ll"); // Low latency tuning
+			screenRecorder.setOption("rc", "vbr_hq"); // Use high quality VBR mode for better quality and higher GPU usage
+			screenRecorder.setOption("zerolatency", "1"); // Minimize latency
+			screenRecorder.setOption("b_ref_mode", "0"); // Disable B-frame references for lower latency
+			screenRecorder.setOption("surfaces", "8"); // Increased from 4 to 8 for more parallel processing
+			screenRecorder.setOption("gpu", "0"); // Use first GPU (change if multiple GPUs available)
+			screenRecorder.setOption("no-scenecut", "1"); // Disable scene cut detection for better performance
+			screenRecorder.setOption("spatial-aq", "1"); // Enable spatial adaptive quantization for better quality
+			screenRecorder.setOption("temporal-aq", "1"); // Enable temporal adaptive quantization
+			screenRecorder.setOption("aq-strength", "15"); // Set adaptive quantization strength (1-15, higher values use more GPU)
+			screenRecorder.setOption("multipass", "fullres"); // Use full resolution multipass encoding (uses more GPU)
+			screenRecorder.setOption("forced-idr", "1"); // Force IDR frames for better seeking
+			screenRecorder.setOption("qp", "15"); // Lower QP value further (from 19 to 15) for better quality and higher GPU usage
+			screenRecorder.setOption("cbr", "0"); // Disable constant bitrate mode
+			screenRecorder.setOption("2pass", "1"); // Enable two-pass encoding for better quality
+			screenRecorder.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
 			streamThread = new Thread(() -> {
 				try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
 					Graphics g = streamCanvas.getGraphics();
@@ -324,27 +367,54 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
 					wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 					long sleepTime;
+					// Pre-allocate graphics contexts to avoid creating them in the loop
+					Graphics capGraphics = g.create(CAP_X, CAP_Y, CAP_W, CAP_H);
+					Graphics chatGraphics = g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
+					Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+
+					// Main recording loop
 					while ((grab = screenGrabber.grab()) != null && fine[0] && record) {
 						sleepTime = System.currentTimeMillis();
-						g.create(CAP_X, CAP_Y, CAP_W, CAP_H).drawImage(converter.convert(grab),0,0, CAP_W, CAP_H, null);
-						wrapper.paintChatPanel(g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H));
-						g.setColor(new Color(29,31,33));
+
+						// Convert grabbed frame only once and reuse
+						BufferedImage grabbedImage = converter.convert(grab);
+
+						// Draw captured screen
+						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null);
+
+						// Paint chat panel
+						wrapper.paintChatPanel(chatGraphics);
+
+						// Update logo if needed
 						if (repaintLogo) {
-							g.fillRect(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
-							display.paint(g, LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+							logoGraphics.setColor(new Color(29,31,33));
+							logoGraphics.fillRect(0, 0, LOGO_W, LOGO_H);
+							display.paint(logoGraphics, 0, 0, LOGO_W, LOGO_H);
 							repaintLogo = false;
 						}
+
+						// Convert and record in one step to minimize overhead
 						Frame toRecord = converter.convert(streamCanvas);
 						toRecord.samples = grab.samples;
 						toRecord.timestamp = grab.timestamp;
 						toRecord.audioChannels = grab.audioChannels;
+
+						// Record frame
 						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
+
+						// Update FPS display and manage frame timing
 						long frameDelta = System.currentTimeMillis() - sleepTime;
 						fpsLabel.setText("frameDelta: " + frameDelta);
+
+						// Only sleep if we're ahead of schedule to maximize GPU utilization
 						sleepTime = REC_MILLIS - frameDelta;
-						if (sleepTime > 0) Thread.sleep(sleepTime);
+						if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
 					}
-					g.dispose();
+					// Dispose of all graphics contexts to prevent memory leaks
+					if (capGraphics != null) capGraphics.dispose();
+					if (chatGraphics != null) chatGraphics.dispose();
+					if (logoGraphics != null) logoGraphics.dispose();
+					if (g != null) g.dispose();
 				} catch (Exception e) {
 					fine[0] = false;
 					e.printStackTrace();
@@ -355,7 +425,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			fine[0] = false;
 		}
 	}
-	
+
 	private void stopRecording() {
 		if (!record) return;
 		record = false;
@@ -380,7 +450,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		g.drawImage(bgImg,0,0,null);
 		System.gc();
 	}
-	
+
 	private JPanel makePreviewPanel() {
 		return new JPanel(null,true) {
 			//Overrides {
@@ -392,40 +462,40 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		};
 	}
 	//} Methods
-	
+
 	//Overrides {
 	@Override
 	public void setAsset(RegionEnum reg, AssetEnum asset) {
 		display.setAsset(reg, asset);
 	}
-	
+
 	@Override
 	public AssetEnum getAsset(RegionEnum reg) {
 		return display.getAsset(reg);
 	}
-	
+
 	@Override
 	public void setMood(RegionEnum reg, MoodEnum mood) {
 		display.setMood(reg, mood);
 	}
-	
+
 	@Override
 	public MoodEnum getMood(RegionEnum reg) {
 		return display.getMood(reg);
 	}
-	
+
 	@Override
 	public void dispose() {
 		stopRecording();
 		super.dispose();
 	}
 	//} Overrides
-	
+
 	//Classes {
 	private static class RatioLayout implements LayoutManager {
-		
+
 		private final int ratioWidth, ratioHeight, minWidth, minHeight;
-		
+
 		public RatioLayout(int minWidth, int minHeight) {
 			int ggt = ggt(minWidth, minHeight);
 			ratioWidth = minWidth / ggt;
@@ -433,7 +503,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			this.minWidth = minWidth;
 			this.minHeight = minHeight;
 		}
-		
+
 		private static int ggt(int a, int b) {
 			while (b != 0) {
 				int h = a % b;
@@ -442,17 +512,17 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			}
 			return a;
 		}
-		
+
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-			
+
 		}
-		
+
 		@Override
 		public void removeLayoutComponent(Component comp) {
-			
+
 		}
-		
+
 		@Override
 		public Dimension preferredLayoutSize(Container parent) {
 			int w = parent.getWidth();
@@ -468,12 +538,12 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			}
 			return new Dimension(Math.max(w, minWidth), Math.max(h, minHeight));
 		}
-		
+
 		@Override
 		public Dimension minimumLayoutSize(Container parent) {
 			return new Dimension(minWidth, minHeight);
 		}
-		
+
 		@Override
 		public void layoutContainer(Container parent) {
 			Component[] cs = parent.getComponents();
@@ -484,30 +554,30 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			cs[0].setBounds(x, y, size.width, size.height);
 		}
 	}
-	
+
 	private static class LogoLayout implements LayoutManager {
-		
+
 		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-			
+
 		}
-		
+
 		@Override
 		public void removeLayoutComponent(Component comp) {
-			
+
 		}
-		
+
 		@Override
 		public Dimension preferredLayoutSize(Container parent) {
 			return minimumLayoutSize(parent);
 		}
-		
+
 		@Override
 		public Dimension minimumLayoutSize(Container parent) {
 			return new Dimension(LOGO_W, LOGO_H);
 		}
-		
+
 		@Override
 		public void layoutContainer(Container parent) {
 			synchronized (parent.getTreeLock()) {
