@@ -2,13 +2,20 @@ package com.github.crafterchen2.logoanim.frames;
 
 import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.*;
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
 import org.bytedeco.javacv.*;
 import org.bytedeco.javacv.Frame;
+
+import com.sun.jna.platform.win32.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.awt.image.WritableRaster;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,12 +24,12 @@ import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_ARGB;
 
 //Classes {
 public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
-
+	
 	//Fields {
 	public static final int STREAM_RES_WIDTH = 1920;
 	public static final int STREAM_RES_HEIGHT = 1080;
-	public static final int CAPTURE_RES_WIDTH = 2560;
-	public static final int CAPTURE_RES_HEIGHT = 1440;
+	public static final int CAPTURE_RES_WIDTH = 3840;//2560;
+	public static final int CAPTURE_RES_HEIGHT = 2160;//1440;
 	public static final int PREVIEW_FPS = 60;
 	public static final int REC_FPS = 60;
 	public static final int SAMPLE_RATE = 48_000;
@@ -52,9 +59,11 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	public static final int INFO_Y;
 	public static final int INFO_W;
 	public static final int INFO_H;
-
+	
 	private static final BufferedImage bgImg;
-
+	private static final String STOPBUTTON = "stopbutton";
+	private static final String STOPPROG = "stopprog";
+	
 	private final LogoPainter display;
 	private final JPanel preview = makePreviewPanel();
 	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -63,7 +72,14 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	private Thread streamThread;
 	private boolean repaintLogo = true;
 	private boolean record = false;
+	private boolean stopping = false;
 	private final JLabel fpsLabel = new JLabel("frameDelta: -");
+	private final JButton starter = new JButton("Start");
+	public final CardLayout stopCards = new CardLayout();
+	private final JPanel stopPanel = new JPanel(stopCards);
+	private WinDef.HDC hdcWindow;
+	private WinDef.HDC hdcMemDC;
+	private WinDef.HBITMAP hBitmap;
 	//} Fields
 
 	//Constructor {
@@ -282,12 +298,17 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					JPanel chatControlPanel = JavaFxWrapper.getWrapper().getChatControlPanel();
 					chatControlPanel.setBorder(BorderFactory.createLoweredBevelBorder());
 					sc.add(chatControlPanel, BorderLayout.NORTH);
-					JButton starter = new JButton("Start");
 					starter.addActionListener(_ -> startRecording());
 					sc.add(starter, BorderLayout.CENTER);
-					JButton stopper = new JButton("Stop");
-					stopper.addActionListener(_ -> stopRecording());
-					sc.add(stopper, BorderLayout.SOUTH);
+					{
+						JButton stopper = new JButton("Stop");
+						stopper.addActionListener(_ -> stopRecording());
+						stopPanel.add(stopper, STOPBUTTON);
+						JProgressBar progressBar = new JProgressBar();
+						progressBar.setIndeterminate(true);
+						stopPanel.add(progressBar, STOPPROG);
+					}
+					sc.add(stopPanel, BorderLayout.SOUTH);
 				}
 				tabs.addTab("Stream", sc);
 				tabs.addTab("Remote", new JButton("Remote Control"));
@@ -316,9 +337,9 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	}
 	//} Constructor
 
-	//Methods {
+	//Methods {	
 	private void startRecording() {
-		if (record) return;
+		if (record && !stopping) return;
 		record = true;
 		final boolean[] fine = {true};
 		try {
@@ -366,25 +387,64 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
 
 					Robot robot = new Robot();
-					BufferedImage grabbedImage;
 					final int bytesPerFrame = CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4;
 					final int gcMax = bytesPerFrame * 30;
 					int gcCounter = 0;
+					
+					BufferedImage grabbedImage;
+					hdcWindow = User32.INSTANCE.GetDC(null);
+					hdcMemDC = GDI32.INSTANCE.CreateCompatibleDC(hdcWindow);
+					hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
+					GDI32.INSTANCE.SelectObject(hdcMemDC, hBitmap);
+					WinGDI.BITMAPINFO bmi = new WinGDI.BITMAPINFO();
+					bmi.bmiHeader.biSize = bmi.size();
+					bmi.bmiHeader.biWidth = CAPTURE_RES_WIDTH;
+					bmi.bmiHeader.biHeight = -CAPTURE_RES_HEIGHT; // Negative = top-down
+					bmi.bmiHeader.biPlanes = 1;
+					bmi.bmiHeader.biBitCount = 32;
+					bmi.bmiHeader.biCompression = WinGDI.BI_RGB;
+					// Create pixel buffer
+					Pointer buffer = new Memory((long) CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
+					final int fw = CAPTURE_RES_WIDTH / CAP_W;
+					final int fh = CAPTURE_RES_HEIGHT / CAP_H;
+					final int capW = CAPTURE_RES_WIDTH /fw;
+					final int capH = CAPTURE_RES_HEIGHT /fh;
+					grabbedImage = new BufferedImage(capW, capH, BufferedImage.TYPE_INT_RGB);
+					int[] pixels = ((DataBufferInt) grabbedImage.getRaster().getDataBuffer()).getData();
 					// Main recording loop
 					while (/*(grab = screenGrabber.grab()) != null && */fine[0] && record) {
 						sleepTime = System.currentTimeMillis();
 
 						// converter.convert(grab);
-						grabbedImage = robot.createScreenCapture(new Rectangle(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT));
+						GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT, hdcWindow, 0, 0, GDI32.SRCCOPY); //Grab
+						//grabbedImage = captureScreen(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
 						
-						// Draw captured screen
-						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null);
-						grabbedImage.flush();
-
-						// Paint chat panel
+						GDI32.INSTANCE.GetDIBits(hdcWindow, hBitmap, 0, CAPTURE_RES_HEIGHT, buffer, bmi, WinGDI.DIB_RGB_COLORS); //Conv
+						ByteBuffer bb = buffer.getByteBuffer(0, CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
+						for (int y = 0; y < capH; y++) {
+							for (int x = 0; x < capW; x++) {
+								int index = ((y * fh) * CAPTURE_RES_WIDTH + (x * fw)) * 4;
+								//System.out.println(y + "; " + x + ";" + index);
+								//int blue = buffer.getByte(index) & 0xFF;
+								//int green = buffer.getByte(index + 1) & 0xFF;
+								//int red = buffer.getByte(index + 2) & 0xFF;
+								pixels[y * capW + x] = ((bb.get(index + 2) & 0xff) << 16) | ((bb.get(index + 1) & 0xff) << 8) | (bb.get(index) & 0xff);
+								//grabbedImage.setRGB(x, y, rgb);
+								//capGraphics.setColor(new Color(rgb));
+								//capGraphics.fillRect(x, y, 1, 1);
+							}
+						}
+						//grabbedImage = convertHBitmapToBufferedImage(hBitmap, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
+						//System.out.println("frame done");
+						
+						//grabbedImage = robot.createScreenCapture(new Rectangle(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT));
+						
+						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null); //Draw
+						//System.out.println("frame drawn");
+						//grabbedImage.flush();
+						
 						wrapper.paintChatPanel(chatGraphics);
-
-						// Update logo if needed
+						
 						if (repaintLogo) {
 							logoGraphics.setColor(new Color(29,31,33));
 							logoGraphics.fillRect(0, 0, LOGO_W, LOGO_H);
@@ -392,28 +452,24 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 							repaintLogo = false;
 						}
 
-						// Convert and record in one step to minimize overhead
 						Frame toRecord = converter.convert(streamCanvas);
 						//toRecord.samples = grab.samples;
-						toRecord.timestamp = sleepTime;
+						//toRecord.timestamp = sleepTime;
 						//toRecord.audioChannels = grab.audioChannels;
 
-						// Record frame
 						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
 
-						// Update FPS display and manage frame timing
-						long frameDelta = System.currentTimeMillis() - sleepTime;
-						fpsLabel.setText("frameDelta: " + gcCounter + "/" + gcMax);
+						//long frameDelta = System.currentTimeMillis() - sleepTime;
+						//fpsLabel.setText("frameDelta: " + frameDelta);
 						
-						gcCounter += bytesPerFrame;
-						if (gcCounter > gcMax) {
-							System.gc();
-							gcCounter = 0;
-						}
+						//gcCounter += bytesPerFrame; 
+						//if (gcCounter > gcMax) {
+						//	System.gc();
+						//	gcCounter = 0;
+						//}
 
-						// Only sleep if we're ahead of schedule to maximize GPU utilization
-						sleepTime = REC_MILLIS - frameDelta;
-						if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
+						//sleepTime = REC_MILLIS - frameDelta;
+						//if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
 					}
 					// Dispose of all graphics contexts to prevent memory leaks
 					if (capGraphics != null) capGraphics.dispose();
@@ -432,28 +488,39 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	}
 
 	private void stopRecording() {
-		if (!record) return;
+		if (!record && !stopping) return;
 		record = false;
-		while (streamThread.isAlive()) {}
-		try {
-			if (screenRecorder != null) {
-				screenRecorder.stop();
-				screenRecorder.release();
-				screenRecorder = null;
+		stopping = true;
+		starter.setEnabled(false);
+		stopCards.show(stopPanel, STOPPROG);
+		new Thread(() -> {
+			while (streamThread.isAlive()) {}
+			try {
+				if (screenRecorder != null) {
+					screenRecorder.stop();
+					screenRecorder.release();
+					screenRecorder = null;
+				}
+				GDI32.INSTANCE.DeleteObject(hBitmap);
+				GDI32.INSTANCE.DeleteDC(hdcMemDC);
+				User32.INSTANCE.ReleaseDC(null, hdcWindow);
+				//screenGrabber.stop();
+				//screenGrabber.release();
+				if (streamThread != null) {
+					streamThread.interrupt();
+					streamThread = null;
+				}
+			} catch (Exception e) {
+				System.err.println("Error while stopping:");
+				e.printStackTrace();
 			}
-			screenGrabber.stop();
-			screenGrabber.release();
-			if (streamThread != null) {
-				streamThread.interrupt();
-				streamThread = null;
-			}
-		} catch (Exception e) {
-			System.err.println("Error while stopping:");
-			e.printStackTrace();
-		}
-		Graphics g = streamCanvas.getGraphics();
-		g.drawImage(bgImg,0,0,null);
-		System.gc();
+			Graphics g = streamCanvas.getGraphics();
+			g.drawImage(bgImg,0,0,null);
+			System.gc();
+			stopping = false;
+			starter.setEnabled(true);
+			stopCards.show(stopPanel, STOPBUTTON);
+		}).start();
 	}
 
 	private JPanel makePreviewPanel() {
