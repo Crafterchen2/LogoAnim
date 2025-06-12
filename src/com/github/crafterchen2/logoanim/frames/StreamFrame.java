@@ -1,13 +1,18 @@
 package com.github.crafterchen2.logoanim.frames;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.components.*;
+import com.github.crafterchen2.logoanim.components.AssetSelector;
+import com.github.crafterchen2.logoanim.components.MoodSelector;
+import com.github.crafterchen2.logoanim.components.PresetLibrary;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
-import org.bytedeco.javacv.*;
+import com.sun.jna.platform.win32.GDI32;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.platform.win32.WinGDI;
+import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
-
-import com.sun.jna.platform.win32.*;
+import org.bytedeco.javacv.Java2DFrameConverter;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -18,7 +23,8 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.bytedeco.ffmpeg.global.avcodec.*;
+import static org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_AAC;
+import static org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_H264;
 import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_ARGB;
 
 //Classes {
@@ -62,24 +68,6 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	private static final BufferedImage bgImg;
 	private static final String STOP_BUTTON = "stopButton";
 	private static final String STOP_PROG = "stopProg";
-	
-	private final LogoPainter display;
-	private final JPanel preview = makePreviewPanel();
-	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
-	private FFmpegFrameRecorder screenRecorder;
-	private Thread streamThread;
-	private boolean repaintLogo = true;
-	private boolean record = false;
-	private boolean stopping = false;
-	private final JLabel fpsLabel = new JLabel("frameDelta: -");
-	private final JButton starter = new JButton("Start");
-	public final CardLayout stopCards = new CardLayout();
-	private final JPanel stopPanel = new JPanel(stopCards);
-	private WinDef.HDC hdcWindow;
-	private WinDef.HDC hdcMemDC;
-	private WinDef.HBITMAP hBitmap;
-	//} Fields
-
 	//Constructor {
 	static {
 		final int capX = 4;
@@ -162,11 +150,30 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		PREVIEW_MILLIS = (long) ((1.0 / (double) PREVIEW_FPS) * 1000.0);
 		REC_MILLIS = (long) ((1.0 / (double) REC_FPS) * 1000.0);
 	}
-
+	//} Constructor
+	
+	public final CardLayout stopCards = new CardLayout();
+	private final LogoPainter display;
+	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
+	private final JPanel preview = makePreviewPanel();
+	private final JLabel fpsLabel = new JLabel("frameDelta: -");
+	private final JButton starter = new JButton("Start");
+	private final JPanel stopPanel = new JPanel(stopCards);
+	private FFmpegFrameRecorder screenRecorder;
+	private Thread streamThread;
+	private boolean repaintLogo = true;
+	private boolean record = false;
+	private boolean stopping = false;
+	private WinDef.HDC hdcWindow;
+	private WinDef.HDC hdcMemDC;
+	private WinDef.HBITMAP hBitmap;
+	//} Fields
+	
+	//Constructor {
 	public StreamFrame() throws HeadlessException {
 		this(null, null);
 	}
-
+	
 	public StreamFrame(AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
 		super("Stream Manager");
 		int initFrameWidth = 1600;
@@ -176,17 +183,20 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		display = new LogoPainter(defAssets, defMoods);
-		final Timer blinkTimer = new Timer(5000, _ -> {
+		final Timer blinkTimer = new Timer(
+				5000, _ -> {
 			display.blink = true;
 			repaintLogo = true;
-			Timer minor = new Timer(300, _ -> {
+			Timer minor = new Timer(
+					300, _ -> {
 				display.blink = false;
 				repaintLogo = true;
 			}
 			);
 			minor.setRepeats(false);
 			minor.start();
-		});
+		}
+		);
 		blinkTimer.setRepeats(true);
 		blinkTimer.start();
 		JSplitPane root = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
@@ -291,22 +301,24 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
 		wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 		Graphics g = streamCanvas.getGraphics();
-		g.drawImage(bgImg,0,0,null);
-		Thread previewLoop = new Thread(() -> {
-			boolean fine = true;
-			while (fine) {
-				preview.repaint();
-				try {
-					Thread.sleep(PREVIEW_MILLIS);
-				} catch (InterruptedException _) {
-					fine = false;
-				}
-			}
-		}, "previewLoop");
+		g.drawImage(bgImg, 0, 0, null);
+		Thread previewLoop = new Thread(
+				() -> {
+					boolean fine = true;
+					while (fine) {
+						preview.repaint();
+						try {
+							Thread.sleep(PREVIEW_MILLIS);
+						} catch (InterruptedException _) {
+							fine = false;
+						}
+					}
+				}, "previewLoop"
+		);
 		previewLoop.start();
 	}
 	//} Constructor
-
+	
 	//Methods {	
 	private void startRecording() {
 		if (record && !stopping) return;
@@ -323,7 +335,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			screenRecorder.setVideoCodec(VIDEO_CODEC);
 			//screenRecorder.setSampleRate(SAMPLE_RATE);
 			screenRecorder.setVideoCodecName("h264_nvenc");
-
+			
 			// Set NVENC-specific options to improve performance
 			//screenRecorder.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
 			//screenRecorder.setOption("tune", "ll"); // Low latency tuning
@@ -342,85 +354,87 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			//screenRecorder.setOption("cbr", "0"); // Disable constant bitrate mode
 			//screenRecorder.setOption("2pass", "1"); // Enable two-pass encoding for better quality
 			//screenRecorder.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
-			streamThread = new Thread(() -> {
-				try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
-					long sleepTime;
-					Graphics g = streamCanvas.getGraphics();
-					Graphics capGraphics = g.create(CAP_X, CAP_Y, CAP_W, CAP_H);
-					Graphics chatGraphics = g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
-					Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
-					g.drawImage(bgImg,0,0,null);
-					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-					wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
-					hdcWindow = User32.INSTANCE.GetDC(null);
-					hdcMemDC = GDI32.INSTANCE.CreateCompatibleDC(hdcWindow);
-					hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
-					GDI32.INSTANCE.SelectObject(hdcMemDC, hBitmap);
-					WinGDI.BITMAPINFO bmi = new WinGDI.BITMAPINFO();
-					bmi.bmiHeader.biSize = bmi.size();
-					bmi.bmiHeader.biWidth = CAPTURE_RES_WIDTH;
-					bmi.bmiHeader.biHeight = -CAPTURE_RES_HEIGHT; // Negative = top-down
-					bmi.bmiHeader.biPlanes = 1;
-					bmi.bmiHeader.biBitCount = 32;
-					bmi.bmiHeader.biCompression = WinGDI.BI_RGB;
-					Pointer buffer = new Memory((long) CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
-					final int fw = Math.min(CAPTURE_RES_WIDTH / CAP_W, 1);
-					final int fh = Math.min(CAPTURE_RES_HEIGHT / CAP_H, 1);
-					final int capW = CAPTURE_RES_WIDTH / fw;
-					final int capH = CAPTURE_RES_HEIGHT / fh;
-					BufferedImage grabbedImage = new BufferedImage(capW, capH, BufferedImage.TYPE_INT_RGB);
-					int[] pixels = ((DataBufferInt) grabbedImage.getRaster().getDataBuffer()).getData();
-					screenRecorder.start();
-					while (fine[0] && record) {
-						sleepTime = System.currentTimeMillis();
-
-						GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT, hdcWindow, 0, 0, GDI32.SRCCOPY); //Grab
-						
-						GDI32.INSTANCE.GetDIBits(hdcWindow, hBitmap, 0, CAPTURE_RES_HEIGHT, buffer, bmi, WinGDI.DIB_RGB_COLORS); //Conv
-						ByteBuffer bb = buffer.getByteBuffer(0, CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
-						for (int y = 0; y < capH; y++) {
-							for (int x = 0; x < capW; x++) {
-								int index = ((y * fh) * CAPTURE_RES_WIDTH + (x * fw)) * 4;
-								pixels[y * capW + x] = ((bb.get(index + 2) & 0xff) << 16) | ((bb.get(index + 1) & 0xff) << 8) | (bb.get(index) & 0xff);
+			streamThread = new Thread(
+					() -> {
+						try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
+							long sleepTime;
+							Graphics g = streamCanvas.getGraphics();
+							Graphics capGraphics = g.create(CAP_X, CAP_Y, CAP_W, CAP_H);
+							Graphics chatGraphics = g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
+							Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+							g.drawImage(bgImg, 0, 0, null);
+							JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+							wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
+							hdcWindow = User32.INSTANCE.GetDC(null);
+							hdcMemDC = GDI32.INSTANCE.CreateCompatibleDC(hdcWindow);
+							hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
+							GDI32.INSTANCE.SelectObject(hdcMemDC, hBitmap);
+							WinGDI.BITMAPINFO bmi = new WinGDI.BITMAPINFO();
+							bmi.bmiHeader.biSize = bmi.size();
+							bmi.bmiHeader.biWidth = CAPTURE_RES_WIDTH;
+							bmi.bmiHeader.biHeight = -CAPTURE_RES_HEIGHT; // Negative = top-down
+							bmi.bmiHeader.biPlanes = 1;
+							bmi.bmiHeader.biBitCount = 32;
+							bmi.bmiHeader.biCompression = WinGDI.BI_RGB;
+							Pointer buffer = new Memory((long) CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
+							final int fw = Math.min(CAPTURE_RES_WIDTH / CAP_W, 1);
+							final int fh = Math.min(CAPTURE_RES_HEIGHT / CAP_H, 1);
+							final int capW = CAPTURE_RES_WIDTH / fw;
+							final int capH = CAPTURE_RES_HEIGHT / fh;
+							BufferedImage grabbedImage = new BufferedImage(capW, capH, BufferedImage.TYPE_INT_RGB);
+							int[] pixels = ((DataBufferInt) grabbedImage.getRaster().getDataBuffer()).getData();
+							screenRecorder.start();
+							while (fine[0] && record) {
+								sleepTime = System.currentTimeMillis();
+								
+								GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT, hdcWindow, 0, 0, GDI32.SRCCOPY); //Grab
+								
+								GDI32.INSTANCE.GetDIBits(hdcWindow, hBitmap, 0, CAPTURE_RES_HEIGHT, buffer, bmi, WinGDI.DIB_RGB_COLORS); //Conv
+								ByteBuffer bb = buffer.getByteBuffer(0, CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
+								for (int y = 0; y < capH; y++) {
+									for (int x = 0; x < capW; x++) {
+										int index = ((y * fh) * CAPTURE_RES_WIDTH + (x * fw)) * 4;
+										pixels[y * capW + x] = ((bb.get(index + 2) & 0xff) << 16) | ((bb.get(index + 1) & 0xff) << 8) | (bb.get(index) & 0xff);
+									}
+								}
+								
+								capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null); //Draw
+								
+								wrapper.paintChatPanel(chatGraphics);
+								
+								if (repaintLogo) {
+									logoGraphics.setColor(Color.BLACK);
+									logoGraphics.fillRect(0, 0, LOGO_W, LOGO_H);
+									display.paint(logoGraphics, 0, 0, LOGO_W, LOGO_H);
+									repaintLogo = false;
+								}
+								
+								Frame toRecord = converter.convert(streamCanvas);
+								toRecord.timestamp = sleepTime;
+								screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
+								
+								long frameDelta = System.currentTimeMillis() - sleepTime;
+								fpsLabel.setText("frameDelta: " + frameDelta);
+								
+								//sleepTime = REC_MILLIS - frameDelta;
+								//if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
 							}
+							capGraphics.dispose();
+							chatGraphics.dispose();
+							logoGraphics.dispose();
+							g.dispose();
+						} catch (Exception e) {
+							fine[0] = false;
+							e.printStackTrace();
 						}
-						
-						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null); //Draw
-						
-						wrapper.paintChatPanel(chatGraphics);
-						
-						if (repaintLogo) {
-							logoGraphics.setColor(Color.BLACK);
-							logoGraphics.fillRect(0, 0, LOGO_W, LOGO_H);
-							display.paint(logoGraphics, 0, 0, LOGO_W, LOGO_H);
-							repaintLogo = false;
-						}
-
-						Frame toRecord = converter.convert(streamCanvas);
-						toRecord.timestamp = sleepTime;
-						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
-						
-						long frameDelta = System.currentTimeMillis() - sleepTime;
-						fpsLabel.setText("frameDelta: " + frameDelta);
-						
-						//sleepTime = REC_MILLIS - frameDelta;
-						//if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
-					}
-					capGraphics.dispose();
-					chatGraphics.dispose();
-					logoGraphics.dispose();
-					g.dispose();
-				} catch (Exception e) {
-					fine[0] = false;
-					e.printStackTrace();
-				}
-			}, "streamThread");
+					}, "streamThread"
+			);
 			streamThread.start();
 		} catch (Exception _) {
 			fine[0] = false;
 		}
 	}
-
+	
 	private void stopRecording() {
 		if (!record && !stopping) return;
 		stopping = true;
@@ -428,7 +442,8 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		starter.setEnabled(false);
 		stopCards.show(stopPanel, STOP_PROG);
 		new Thread(() -> {
-			while (streamThread.isAlive()) {}
+			while (streamThread.isAlive()) {
+			}
 			try {
 				if (screenRecorder != null) {
 					screenRecorder.stop();
@@ -450,7 +465,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 				e.printStackTrace();
 			}
 			Graphics g = streamCanvas.getGraphics();
-			g.drawImage(bgImg,0,0,null);
+			g.drawImage(bgImg, 0, 0, null);
 			g.dispose();
 			System.gc();
 			stopping = false;
@@ -458,53 +473,57 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			stopCards.show(stopPanel, STOP_BUTTON);
 		}).start();
 	}
-
+	
 	private JPanel makePreviewPanel() {
-		return new JPanel(null,true) {
+		return new JPanel(null, true) {
 			//Overrides {
 			@Override
 			protected void paintComponent(Graphics g) {
-				g.drawImage(streamCanvas, 0,0, getWidth(), getHeight(), null);
+				g.drawImage(streamCanvas, 0, 0, getWidth(), getHeight(), null);
 			}
 			//} Overrides
 		};
 	}
 	//} Methods
-
+	
 	//Overrides {
 	@Override
 	public void setAsset(RegionEnum reg, AssetEnum asset) {
 		display.setAsset(reg, asset);
 	}
-
+	
 	@Override
 	public AssetEnum getAsset(RegionEnum reg) {
 		return display.getAsset(reg);
 	}
-
+	
 	@Override
 	public void setMood(RegionEnum reg, MoodEnum mood) {
 		display.setMood(reg, mood);
 	}
-
+	
 	@Override
 	public MoodEnum getMood(RegionEnum reg) {
 		return display.getMood(reg);
 	}
-
+	
 	@Override
 	public void dispose() {
 		stopRecording();
-		while (stopping) {}
+		while (stopping) {
+		}
 		super.dispose();
 	}
 	//} Overrides
-
+	
 	//Classes {
 	private static class RatioLayout implements LayoutManager {
-
+		
+		//Fields {
 		private final int ratioWidth, ratioHeight, minWidth, minHeight;
-
+		//} Fields
+		
+		//Constructor {
 		public RatioLayout(int minWidth, int minHeight) {
 			int ggt = ggt(minWidth, minHeight);
 			ratioWidth = minWidth / ggt;
@@ -512,7 +531,9 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			this.minWidth = minWidth;
 			this.minHeight = minHeight;
 		}
-
+		//} Constructor
+		
+		//Methods {
 		private static int ggt(int a, int b) {
 			while (b != 0) {
 				int h = a % b;
@@ -521,17 +542,19 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			}
 			return a;
 		}
-
+		//} Methods
+		
+		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-
+			
 		}
-
+		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-
+			
 		}
-
+		
 		@Override
 		public Dimension preferredLayoutSize(Container parent) {
 			int w = parent.getWidth();
@@ -547,12 +570,12 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			}
 			return new Dimension(Math.max(w, minWidth), Math.max(h, minHeight));
 		}
-
+		
 		@Override
 		public Dimension minimumLayoutSize(Container parent) {
 			return new Dimension(minWidth, minHeight);
 		}
-
+		
 		@Override
 		public void layoutContainer(Container parent) {
 			Component[] cs = parent.getComponents();
@@ -562,31 +585,32 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			int y = parent.getHeight() / 2 - size.height / 2;
 			cs[0].setBounds(x, y, size.width, size.height);
 		}
+		//} Overrides
 	}
-
+	
 	private static class LogoLayout implements LayoutManager {
-
+		
 		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-
+			
 		}
-
+		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-
+			
 		}
-
+		
 		@Override
 		public Dimension preferredLayoutSize(Container parent) {
 			return minimumLayoutSize(parent);
 		}
-
+		
 		@Override
 		public Dimension minimumLayoutSize(Container parent) {
 			return new Dimension(LOGO_W, LOGO_H);
 		}
-
+		
 		@Override
 		public void layoutContainer(Container parent) {
 			synchronized (parent.getTreeLock()) {
