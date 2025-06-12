@@ -21,14 +21,14 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	//Fields {
 	public static final int STREAM_RES_WIDTH = 1920;
 	public static final int STREAM_RES_HEIGHT = 1080;
-	public static final int CAPTURE_RES_WIDTH = 3840 / 10;
-	public static final int CAPTURE_RES_HEIGHT = 2160 / 10;
+	public static final int CAPTURE_RES_WIDTH = 2560;
+	public static final int CAPTURE_RES_HEIGHT = 1440;
 	public static final int PREVIEW_FPS = 60;
 	public static final int REC_FPS = 60;
 	public static final int SAMPLE_RATE = 48_000;
 	public static final int AUDIO_CHANNELS = 2;
 	public static final int AUDIO_BITRATE = 160_000;
-	public static final int VIDEO_BITRATE = 80000_000; // Increased from 51Mbps to 80Mbps to allow more GPU utilization
+	public static final int VIDEO_BITRATE = 51000_000;
 	public static final int VIDEO_CODEC = AV_CODEC_ID_H264;
 	public static final int AUDIO_CODEC = AV_CODEC_ID_AAC;
 	public static final long REC_MILLIS;
@@ -316,13 +316,6 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	}
 	//} Constructor
 
-	/* TODO for Junie:
-	 * Write a ffmpeg command for the terminal that records with the exact same settings as the current Project does.
-	 * Write here --> 
-	 * ffmpeg -f gdigrab -framerate 60 -video_size 3840x2160 -i desktop -f dshow -audio_buffer_size 50 -i audio="Microphone" -c:v h264_nvenc -preset p1 -tune ll -rc vbr_hq -zerolatency 1 -b_ref_mode 0 -surfaces 8 -gpu 0 -no-scenecut 1 -spatial-aq 1 -temporal-aq 1 -aq-strength 15 -multipass fullres -forced-idr 1 -qp 15 -cbr 0 -2pass 1 -bf 0 -b:v 80M -c:a aac -b:a 160k -ar 48000 -ac 2 -vf scale=1920:1080 -pix_fmt yuv420p output.mp4
-	 * Testing result: Quality and Encoder usage was identical. The Java implementation doesn't seem to be the problem here, It must be some configuration issue.
-	 * */
-
 	//Methods {
 	private void startRecording() {
 		if (record) return;
@@ -330,38 +323,38 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		final boolean[] fine = {true};
 		try {
 			screenRecorder = FFmpegFrameRecorder.createDefault(System.currentTimeMillis() + ".avi", STREAM_RES_WIDTH, STREAM_RES_HEIGHT);
-			screenRecorder.setFrameRate(REC_FPS);
-			screenRecorder.setAudioChannels(AUDIO_CHANNELS);
-			screenRecorder.setAudioBitrate(AUDIO_BITRATE);
-			screenRecorder.setAudioCodec(AUDIO_CODEC);
+			//screenRecorder.setFrameRate(REC_FPS);
+			//screenRecorder.setAudioChannels(AUDIO_CHANNELS);
+			//screenRecorder.setAudioBitrate(AUDIO_BITRATE);
+			//screenRecorder.setAudioCodec(AUDIO_CODEC);
 			screenRecorder.setVideoBitrate(VIDEO_BITRATE);
 			screenRecorder.setVideoCodec(VIDEO_CODEC);
-			screenRecorder.setSampleRate(SAMPLE_RATE);
+			//screenRecorder.setSampleRate(SAMPLE_RATE);
 			screenRecorder.setVideoCodecName("h264_nvenc");
 
 			// Set NVENC-specific options to improve performance
-			screenRecorder.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
-			screenRecorder.setOption("tune", "ll"); // Low latency tuning
-			screenRecorder.setOption("rc", "vbr_hq"); // Use high quality VBR mode for better quality and higher GPU usage
-			screenRecorder.setOption("zerolatency", "1"); // Minimize latency
-			screenRecorder.setOption("b_ref_mode", "0"); // Disable B-frame references for lower latency
-			screenRecorder.setOption("surfaces", "8"); // Increased from 4 to 8 for more parallel processing
-			screenRecorder.setOption("gpu", "0"); // Use first GPU (change if multiple GPUs available)
-			screenRecorder.setOption("no-scenecut", "1"); // Disable scene cut detection for better performance
-			screenRecorder.setOption("spatial-aq", "1"); // Enable spatial adaptive quantization for better quality
-			screenRecorder.setOption("temporal-aq", "1"); // Enable temporal adaptive quantization
-			screenRecorder.setOption("aq-strength", "15"); // Set adaptive quantization strength (1-15, higher values use more GPU)
-			screenRecorder.setOption("multipass", "fullres"); // Use full resolution multipass encoding (uses more GPU)
-			screenRecorder.setOption("forced-idr", "1"); // Force IDR frames for better seeking
-			screenRecorder.setOption("qp", "15"); // Lower QP value further (from 19 to 15) for better quality and higher GPU usage
-			screenRecorder.setOption("cbr", "0"); // Disable constant bitrate mode
-			screenRecorder.setOption("2pass", "1"); // Enable two-pass encoding for better quality
-			screenRecorder.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
+			//screenRecorder.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
+			//screenRecorder.setOption("tune", "ll"); // Low latency tuning
+			//screenRecorder.setOption("rc", "vbr_hq"); // Use high quality VBR mode for better quality and higher GPU usage
+			//screenRecorder.setOption("zerolatency", "1"); // Minimize latency
+			//screenRecorder.setOption("b_ref_mode", "0"); // Disable B-frame references for lower latency
+			//screenRecorder.setOption("surfaces", "8"); // Increased from 4 to 8 for more parallel processing
+			//screenRecorder.setOption("gpu", "0"); // Use first GPU (change if multiple GPUs available)
+			//screenRecorder.setOption("no-scenecut", "1"); // Disable scene cut detection for better performance
+			//screenRecorder.setOption("spatial-aq", "1"); // Enable spatial adaptive quantization for better quality
+			//screenRecorder.setOption("temporal-aq", "1"); // Enable temporal adaptive quantization
+			//screenRecorder.setOption("aq-strength", "15"); // Set adaptive quantization strength (1-15, higher values use more GPU)
+			//screenRecorder.setOption("multipass", "fullres"); // Use full resolution multipass encoding (uses more GPU)
+			//screenRecorder.setOption("forced-idr", "1"); // Force IDR frames for better seeking
+			//screenRecorder.setOption("qp", "15"); // Lower QP value further (from 19 to 15) for better quality and higher GPU usage
+			//screenRecorder.setOption("cbr", "0"); // Disable constant bitrate mode
+			//screenRecorder.setOption("2pass", "1"); // Enable two-pass encoding for better quality
+			//screenRecorder.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
 			streamThread = new Thread(() -> {
 				try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
 					Graphics g = streamCanvas.getGraphics();
 					g.drawImage(bgImg,0,0,null);
-					screenGrabber.start();
+					//screenGrabber.start();
 					screenRecorder.start();
 					Frame grab;
 					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
@@ -372,15 +365,21 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					Graphics chatGraphics = g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 					Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
 
+					Robot robot = new Robot();
+					BufferedImage grabbedImage;
+					final int bytesPerFrame = CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4;
+					final int gcMax = bytesPerFrame * 30;
+					int gcCounter = 0;
 					// Main recording loop
-					while ((grab = screenGrabber.grab()) != null && fine[0] && record) {
+					while (/*(grab = screenGrabber.grab()) != null && */fine[0] && record) {
 						sleepTime = System.currentTimeMillis();
 
-						// Convert grabbed frame only once and reuse
-						BufferedImage grabbedImage = converter.convert(grab);
-
+						// converter.convert(grab);
+						grabbedImage = robot.createScreenCapture(new Rectangle(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT));
+						
 						// Draw captured screen
 						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null);
+						grabbedImage.flush();
 
 						// Paint chat panel
 						wrapper.paintChatPanel(chatGraphics);
@@ -395,16 +394,22 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 
 						// Convert and record in one step to minimize overhead
 						Frame toRecord = converter.convert(streamCanvas);
-						toRecord.samples = grab.samples;
-						toRecord.timestamp = grab.timestamp;
-						toRecord.audioChannels = grab.audioChannels;
+						//toRecord.samples = grab.samples;
+						toRecord.timestamp = sleepTime;
+						//toRecord.audioChannels = grab.audioChannels;
 
 						// Record frame
 						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
 
 						// Update FPS display and manage frame timing
 						long frameDelta = System.currentTimeMillis() - sleepTime;
-						fpsLabel.setText("frameDelta: " + frameDelta);
+						fpsLabel.setText("frameDelta: " + gcCounter + "/" + gcMax);
+						
+						gcCounter += bytesPerFrame;
+						if (gcCounter > gcMax) {
+							System.gc();
+							gcCounter = 0;
+						}
 
 						// Only sleep if we're ahead of schedule to maximize GPU utilization
 						sleepTime = REC_MILLIS - frameDelta;
