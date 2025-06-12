@@ -14,7 +14,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.awt.image.WritableRaster;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,13 +60,12 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	public static final int INFO_H;
 	
 	private static final BufferedImage bgImg;
-	private static final String STOPBUTTON = "stopbutton";
-	private static final String STOPPROG = "stopprog";
+	private static final String STOP_BUTTON = "stopButton";
+	private static final String STOP_PROG = "stopProg";
 	
 	private final LogoPainter display;
 	private final JPanel preview = makePreviewPanel();
 	private final BufferedImage streamCanvas = new BufferedImage(STREAM_RES_WIDTH, STREAM_RES_HEIGHT, BufferedImage.TYPE_INT_RGB);
-	private final FFmpegFrameGrabber screenGrabber = new FFmpegFrameGrabber("desktop");
 	private FFmpegFrameRecorder screenRecorder;
 	private Thread streamThread;
 	private boolean repaintLogo = true;
@@ -174,36 +172,9 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 		int initFrameWidth = 1600;
 		int initFrameHeight = 900;
 		setSize(initFrameWidth, initFrameHeight);
-		setLocation(100, 100);
+		setLocationByPlatform(true);
 		setResizable(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		screenGrabber.setFrameRate(REC_FPS);
-		screenGrabber.setImageWidth(CAPTURE_RES_WIDTH);
-		screenGrabber.setImageHeight(CAPTURE_RES_HEIGHT);
-		screenGrabber.setAudioChannels(AUDIO_CHANNELS);
-		screenGrabber.setAudioBitrate(AUDIO_BITRATE);
-		screenGrabber.setAudioCodec(AUDIO_CODEC);
-		screenGrabber.setVideoCodec(VIDEO_CODEC);
-		screenGrabber.setSampleRate(SAMPLE_RATE);
-		screenGrabber.setFormat("gdigrab");
-		screenGrabber.setVideoCodecName("h264_nvenc");
-
-		// Set NVENC-specific options to improve performance for screen grabber
-		screenGrabber.setOption("preset", "p1"); // Use p1 (highest quality) instead of p7 to increase GPU usage
-		screenGrabber.setOption("tune", "ll"); // Low latency tuning
-		screenGrabber.setOption("rc", "vbr_hq"); // Use high quality VBR mode for better quality and higher GPU usage
-		screenGrabber.setOption("zerolatency", "1"); // Minimize latency
-		screenGrabber.setOption("gpu", "0"); // Use first GPU
-		screenGrabber.setOption("spatial-aq", "1"); // Enable spatial adaptive quantization
-		screenGrabber.setOption("temporal-aq", "1"); // Enable temporal adaptive quantization
-		screenGrabber.setOption("aq-strength", "15"); // Maximum adaptive quantization strength
-		screenGrabber.setOption("multipass", "fullres"); // Use full resolution multipass encoding
-		screenGrabber.setOption("qp", "15"); // Lower QP value further (from 19 to 15) for better quality and higher GPU usage
-		screenGrabber.setOption("surfaces", "8"); // Increased from default to 8 for more parallel processing
-		screenGrabber.setOption("2pass", "1"); // Enable two-pass encoding for better quality
-		screenGrabber.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
-		screenGrabber.setOption("offset_x", "200");
-		screenGrabber.setOption("offset_y", "200");
 		display = new LogoPainter(defAssets, defMoods);
 		final Timer blinkTimer = new Timer(5000, _ -> {
 			display.blink = true;
@@ -215,8 +186,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			);
 			minor.setRepeats(false);
 			minor.start();
-		}
-		);
+		});
 		blinkTimer.setRepeats(true);
 		blinkTimer.start();
 		JSplitPane root = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
@@ -303,10 +273,10 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					{
 						JButton stopper = new JButton("Stop");
 						stopper.addActionListener(_ -> stopRecording());
-						stopPanel.add(stopper, STOPBUTTON);
+						stopPanel.add(stopper, STOP_BUTTON);
 						JProgressBar progressBar = new JProgressBar();
 						progressBar.setIndeterminate(true);
-						stopPanel.add(progressBar, STOPPROG);
+						stopPanel.add(progressBar, STOP_PROG);
 					}
 					sc.add(stopPanel, BorderLayout.SOUTH);
 				}
@@ -340,6 +310,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	//Methods {	
 	private void startRecording() {
 		if (record && !stopping) return;
+		starter.setEnabled(false);
 		record = true;
 		final boolean[] fine = {true};
 		try {
@@ -373,25 +344,14 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			//screenRecorder.setOption("bf", "0"); // Disable B-frames to reduce latency and increase GPU usage
 			streamThread = new Thread(() -> {
 				try (Java2DFrameConverter converter = new Java2DFrameConverter()) {
-					Graphics g = streamCanvas.getGraphics();
-					g.drawImage(bgImg,0,0,null);
-					//screenGrabber.start();
-					screenRecorder.start();
-					Frame grab;
-					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-					wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 					long sleepTime;
-					// Pre-allocate graphics contexts to avoid creating them in the loop
+					Graphics g = streamCanvas.getGraphics();
 					Graphics capGraphics = g.create(CAP_X, CAP_Y, CAP_W, CAP_H);
 					Graphics chatGraphics = g.create(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 					Graphics logoGraphics = g.create(LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
-
-					Robot robot = new Robot();
-					final int bytesPerFrame = CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4;
-					final int gcMax = bytesPerFrame * 30;
-					int gcCounter = 0;
-					
-					BufferedImage grabbedImage;
+					g.drawImage(bgImg,0,0,null);
+					JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+					wrapper.getChatPanel().setBounds(CHAT_X, CHAT_Y, CHAT_W, CHAT_H);
 					hdcWindow = User32.INSTANCE.GetDC(null);
 					hdcMemDC = GDI32.INSTANCE.CreateCompatibleDC(hdcWindow);
 					hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
@@ -403,79 +363,53 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 					bmi.bmiHeader.biPlanes = 1;
 					bmi.bmiHeader.biBitCount = 32;
 					bmi.bmiHeader.biCompression = WinGDI.BI_RGB;
-					// Create pixel buffer
 					Pointer buffer = new Memory((long) CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
-					final int fw = CAPTURE_RES_WIDTH / CAP_W;
-					final int fh = CAPTURE_RES_HEIGHT / CAP_H;
-					final int capW = CAPTURE_RES_WIDTH /fw;
-					final int capH = CAPTURE_RES_HEIGHT /fh;
-					grabbedImage = new BufferedImage(capW, capH, BufferedImage.TYPE_INT_RGB);
+					final int fw = Math.min(CAPTURE_RES_WIDTH / CAP_W, 1);
+					final int fh = Math.min(CAPTURE_RES_HEIGHT / CAP_H, 1);
+					final int capW = CAPTURE_RES_WIDTH / fw;
+					final int capH = CAPTURE_RES_HEIGHT / fh;
+					BufferedImage grabbedImage = new BufferedImage(capW, capH, BufferedImage.TYPE_INT_RGB);
 					int[] pixels = ((DataBufferInt) grabbedImage.getRaster().getDataBuffer()).getData();
-					// Main recording loop
-					while (/*(grab = screenGrabber.grab()) != null && */fine[0] && record) {
+					screenRecorder.start();
+					while (fine[0] && record) {
 						sleepTime = System.currentTimeMillis();
 
-						// converter.convert(grab);
 						GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT, hdcWindow, 0, 0, GDI32.SRCCOPY); //Grab
-						//grabbedImage = captureScreen(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
 						
 						GDI32.INSTANCE.GetDIBits(hdcWindow, hBitmap, 0, CAPTURE_RES_HEIGHT, buffer, bmi, WinGDI.DIB_RGB_COLORS); //Conv
 						ByteBuffer bb = buffer.getByteBuffer(0, CAPTURE_RES_WIDTH * CAPTURE_RES_HEIGHT * 4);
 						for (int y = 0; y < capH; y++) {
 							for (int x = 0; x < capW; x++) {
 								int index = ((y * fh) * CAPTURE_RES_WIDTH + (x * fw)) * 4;
-								//System.out.println(y + "; " + x + ";" + index);
-								//int blue = buffer.getByte(index) & 0xFF;
-								//int green = buffer.getByte(index + 1) & 0xFF;
-								//int red = buffer.getByte(index + 2) & 0xFF;
 								pixels[y * capW + x] = ((bb.get(index + 2) & 0xff) << 16) | ((bb.get(index + 1) & 0xff) << 8) | (bb.get(index) & 0xff);
-								//grabbedImage.setRGB(x, y, rgb);
-								//capGraphics.setColor(new Color(rgb));
-								//capGraphics.fillRect(x, y, 1, 1);
 							}
 						}
-						//grabbedImage = convertHBitmapToBufferedImage(hBitmap, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT);
-						//System.out.println("frame done");
-						
-						//grabbedImage = robot.createScreenCapture(new Rectangle(0, 0, CAPTURE_RES_WIDTH, CAPTURE_RES_HEIGHT));
 						
 						capGraphics.drawImage(grabbedImage, 0, 0, CAP_W, CAP_H, null); //Draw
-						//System.out.println("frame drawn");
-						//grabbedImage.flush();
 						
 						wrapper.paintChatPanel(chatGraphics);
 						
 						if (repaintLogo) {
-							logoGraphics.setColor(new Color(29,31,33));
+							logoGraphics.setColor(Color.BLACK);
 							logoGraphics.fillRect(0, 0, LOGO_W, LOGO_H);
 							display.paint(logoGraphics, 0, 0, LOGO_W, LOGO_H);
 							repaintLogo = false;
 						}
 
 						Frame toRecord = converter.convert(streamCanvas);
-						//toRecord.samples = grab.samples;
-						//toRecord.timestamp = sleepTime;
-						//toRecord.audioChannels = grab.audioChannels;
-
+						toRecord.timestamp = sleepTime;
 						screenRecorder.record(toRecord, AV_PIX_FMT_ARGB);
-
-						//long frameDelta = System.currentTimeMillis() - sleepTime;
-						//fpsLabel.setText("frameDelta: " + frameDelta);
 						
-						//gcCounter += bytesPerFrame; 
-						//if (gcCounter > gcMax) {
-						//	System.gc();
-						//	gcCounter = 0;
-						//}
-
+						long frameDelta = System.currentTimeMillis() - sleepTime;
+						fpsLabel.setText("frameDelta: " + frameDelta);
+						
 						//sleepTime = REC_MILLIS - frameDelta;
 						//if (sleepTime > 5) Thread.sleep(sleepTime); // Only sleep if we have at least 5ms to spare
 					}
-					// Dispose of all graphics contexts to prevent memory leaks
-					if (capGraphics != null) capGraphics.dispose();
-					if (chatGraphics != null) chatGraphics.dispose();
-					if (logoGraphics != null) logoGraphics.dispose();
-					if (g != null) g.dispose();
+					capGraphics.dispose();
+					chatGraphics.dispose();
+					logoGraphics.dispose();
+					g.dispose();
 				} catch (Exception e) {
 					fine[0] = false;
 					e.printStackTrace();
@@ -489,10 +423,10 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 
 	private void stopRecording() {
 		if (!record && !stopping) return;
-		record = false;
 		stopping = true;
+		record = false;
 		starter.setEnabled(false);
-		stopCards.show(stopPanel, STOPPROG);
+		stopCards.show(stopPanel, STOP_PROG);
 		new Thread(() -> {
 			while (streamThread.isAlive()) {}
 			try {
@@ -504,8 +438,9 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 				GDI32.INSTANCE.DeleteObject(hBitmap);
 				GDI32.INSTANCE.DeleteDC(hdcMemDC);
 				User32.INSTANCE.ReleaseDC(null, hdcWindow);
-				//screenGrabber.stop();
-				//screenGrabber.release();
+				hBitmap = null;
+				hdcMemDC = null;
+				hdcWindow = null;
 				if (streamThread != null) {
 					streamThread.interrupt();
 					streamThread = null;
@@ -516,10 +451,11 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 			}
 			Graphics g = streamCanvas.getGraphics();
 			g.drawImage(bgImg,0,0,null);
+			g.dispose();
 			System.gc();
 			stopping = false;
 			starter.setEnabled(true);
-			stopCards.show(stopPanel, STOPBUTTON);
+			stopCards.show(stopPanel, STOP_BUTTON);
 		}).start();
 	}
 
@@ -559,6 +495,7 @@ public class StreamFrame extends JFrame implements AssetProvider, MoodProvider {
 	@Override
 	public void dispose() {
 		stopRecording();
+		while (stopping) {}
 		super.dispose();
 	}
 	//} Overrides
