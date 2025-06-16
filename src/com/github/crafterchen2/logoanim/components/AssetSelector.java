@@ -14,7 +14,7 @@ import java.util.Objects;
 public class AssetSelector extends Selector implements AssetProvider {
 	
 	//Fields {
-	private final HashMap<RegionEnum, AssetEnum> assets = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, AssetData> assets = HashMap.newHashMap(RegionEnum.values().length);
 	private final ArrayList<Listener> listeners = new ArrayList<>();
 	private final MoodProvider moodProvider;
 	//} Fields
@@ -43,7 +43,7 @@ public class AssetSelector extends Selector implements AssetProvider {
 		rightPanel.add(new AssetButton(RegionEnum.RIGHT_EYE, null));
 		smilePanel.add(new AssetButton(RegionEnum.SMILE, null));
 		decoPanel.add(new AssetButton(RegionEnum.DECO, null));
-		for (AssetEnum asset : AssetEnum.values()) {
+		for (AssetData asset : AssetEnum.values()) {
 			switch (asset.getType()) {
 				case EYE -> {
 					leftPanel.add(new AssetButton(RegionEnum.LEFT_EYE, asset));
@@ -77,12 +77,12 @@ public class AssetSelector extends Selector implements AssetProvider {
 	//} Methods
 	
 	//Overrides {
-	public AssetEnum getAsset(RegionEnum reg) {
+	public AssetData getAsset(RegionEnum reg) {
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
 		return assets.get(reg);
 	}
 	
-	public void setAsset(RegionEnum reg, AssetEnum asset) {
+	public void setAsset(RegionEnum reg, AssetData asset) {
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
 		if (asset == null || reg.type == asset.getType()) {
 			assets.put(reg, asset);
@@ -95,10 +95,10 @@ public class AssetSelector extends Selector implements AssetProvider {
 	//} Overrides
 	
 	//Classes {
-	private class AssetButton extends SelectorButton<AssetEnum> {
+	private class AssetButton extends SelectorButton<AssetData> {
 		
 		//Constructor {
-		public AssetButton(RegionEnum reg, AssetEnum subject) {
+		public AssetButton(RegionEnum reg, AssetData subject) {
 			super(reg, subject);
 			addActionListener(_ -> setAsset(reg, subject));
 		}
@@ -118,9 +118,9 @@ public class AssetSelector extends Selector implements AssetProvider {
 			g.setColor(new Color(0, 0, 0));
 			g.fillRect(x, y, c, c);
 			if (subject == null) return;
-			MoodEnum mood = moodProvider.getMood(reg);
+			MoodData mood = moodProvider.getMood(reg);
 			BufferedImage img = subject.getImg();
-			if (mood != null) img = AssetEnum.recolorImg(mood, img);
+			if (mood != null) img = AssetData.recolorImg(mood, img);
 			w = (reg.ratio < 1.0) ? (int) (c * reg.ratio) : c;
 			h = (reg.ratio > 1.0) ? (int) (c / reg.ratio) : c;
 			//IMPROVEME: replace if with math if possible

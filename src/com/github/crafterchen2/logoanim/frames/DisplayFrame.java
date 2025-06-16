@@ -90,23 +90,23 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	public abstract int getMinScale();
 	
 	@Override
-	public void setAsset(RegionEnum reg, AssetEnum asset) {
+	public void setAsset(RegionEnum reg, AssetData asset) {
 		display.setAsset(reg, asset);
 	}
 	
 	@Override
-	public void setMood(RegionEnum reg, MoodEnum mood) {
+	public void setMood(RegionEnum reg, MoodData mood) {
 		display.setMood(reg, mood);
 	}
 	
 	@Override
-	public AssetEnum getAsset(RegionEnum reg) {
+	public AssetData getAsset(RegionEnum reg) {
 		return display.getAsset(reg);
 	}
 	
 	//Overrides {
 	@Override
-	public MoodEnum getMood(RegionEnum reg) {
+	public MoodData getMood(RegionEnum reg) {
 		return display.getMood(reg);
 	}
 	

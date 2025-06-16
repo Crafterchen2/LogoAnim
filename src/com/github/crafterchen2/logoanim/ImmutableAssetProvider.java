@@ -6,7 +6,7 @@ import java.util.Map;
 public interface ImmutableAssetProvider extends Provider {
 	
 	//Methods {
-	AssetEnum getAsset(RegionEnum reg);
+	AssetData getAsset(RegionEnum reg);
 	//} Methods
 	
 	//Getter {
@@ -21,18 +21,18 @@ public interface ImmutableAssetProvider extends Provider {
 	//} Getter
 	
 	//Classes {
-	class Default extends Provider.Default<AssetEnum> implements ImmutableAssetProvider {
+	class Default extends Provider.Default<AssetData> implements ImmutableAssetProvider {
 		
 		//Constructor {
 		public Default() {
 			super(null, null, null, null);
 		}
 		
-		protected Default(Map<RegionEnum, AssetEnum> assets) {
+		protected Default(Map<RegionEnum, AssetData> assets) {
 			super(assets);
 		}
 		
-		public Default(AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco) {
+		public Default(AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco) {
 			super(leftEye, rightEye, smile, deco);
 		}
 		
@@ -42,7 +42,7 @@ public interface ImmutableAssetProvider extends Provider {
 		//} Constructor
 		
 		//Methods {
-		private static Map<RegionEnum, AssetEnum> makeMap(ImmutableAssetProvider prov) {
+		private static Map<RegionEnum, AssetData> makeMap(ImmutableAssetProvider prov) {
 			if (prov == null) return Map.of();
 			return makeMap(
 					prov.getAsset(RegionEnum.LEFT_EYE),
@@ -55,7 +55,7 @@ public interface ImmutableAssetProvider extends Provider {
 		
 		//Overrides {
 		@Override
-		public AssetEnum getAsset(RegionEnum reg) {
+		public AssetData getAsset(RegionEnum reg) {
 			return map.get(reg);
 		}
 		//} Overrides

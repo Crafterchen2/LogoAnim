@@ -91,11 +91,11 @@ public class PresetLibrary extends JComponent {
 		}
 	}
 	
-	private void addDisplay(JPanel grid, AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco) {
+	private void addDisplay(JPanel grid, AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco) {
 		addDisplay(grid, leftEye, rightEye, smile, deco, null, null, null, null);
 	}
 	
-	private void addDisplay(JPanel grid, AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco, MoodEnum leftEyeMood, MoodEnum rightEyeMood, MoodEnum smileMood, MoodEnum decoMood) {
+	private void addDisplay(JPanel grid, AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco, MoodData leftEyeMood, MoodData rightEyeMood, MoodData smileMood, MoodData decoMood) {
 		LogoDisplay display = new LogoDisplay(new AssetProvider.Default(leftEye, rightEye, smile, deco), new MoodProvider.Default(leftEyeMood, rightEyeMood, smileMood, decoMood));
 		int size = calcDisplaySize();
 		display.setPreferredSize(new Dimension(size, size));

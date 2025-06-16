@@ -48,7 +48,7 @@ public class Parser {
 		return new LogoConfig(new ImmutableAssetProvider.Default(assets), new ImmutableMoodProvider.Default(moods));
 	}
 	
-	public static MoodEnum parseMood(String string, MoodEnum def) {
+	public static MoodData parseMood(String string, MoodData def) {
 		try {
 			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
 			if (string.contentEquals(KEEP)) return def;
@@ -60,12 +60,12 @@ public class Parser {
 		}
 	}
 	
-	public static AssetEnum parseAsset(String string, AssetType validType, AssetEnum def) {
+	public static AssetData parseAsset(String string, AssetType validType, AssetData def) {
 		IllegalArgumentException exc = new IllegalArgumentException(string + " is not a valid asset with type " + validType + ".");
 		try {
 			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
 			if (string.contentEquals(KEEP)) return def;
-			AssetEnum parsed = AssetEnum.valueOf(string);
+			AssetData parsed = AssetEnum.valueOf(string);
 			if (parsed.getType() != validType) {
 				throw exc;
 			}

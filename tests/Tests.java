@@ -16,7 +16,77 @@ public class Tests {
 	//Methods {
 	public static void main(String[] args) {
 		//testStream();
-		idRegexTest();
+		//idRegexTest();
+		colorParseTest();
+		colorParseTestFor();
+	}
+	
+	/**
+	 * Pattern:
+	 * <code>
+	 * byte in = [R|r|G|g|B|b]
+	 * int out = [0xFF|R*4|r*4|G*4|g*4|B*4|b*4]
+	 * </code>
+	 */
+	private static void colorParseTestFor() {
+		byte[] ins = new byte[]{
+				(byte) 0b00_00_00,
+				(byte) 0b10_10_10,
+				(byte) 0b01_01_01,
+				(byte) 0b11_11_11,
+				(byte) 0b00_01_10,
+				(byte) 0b11_10_01,
+				};
+		for (int i = 0; i < ins.length; i++) {
+			byte in = ins[i];
+			int out = 0;
+			for (int j = 0; j < 6; j++) {
+				out = ((out |((in & (1 << j)) << (31 - j))) >> 3) >>> 1;
+			}
+			out = (out >>> 7) | 0xff << 24;
+			System.out.println(i + ": 0b" + Long.toBinaryString(in) + " > 0x" + Integer.toHexString(out));
+		}
+	}
+	
+	/**
+	 * Pattern:
+	 * <code>
+	 * byte in = [R|r|G|g|B|b]
+	 * int out = [0xFF|R*4|r*4|G*4|g*4|B*4|b*4]
+	 * </code>
+	 */
+	private static void colorParseTest() {
+		byte[] ins = new byte[]{
+				(byte) 0b00_00_00,
+				(byte) 0b10_10_10,
+				(byte) 0b01_01_01,
+				(byte) 0b11_11_11,
+				(byte) 0b00_01_10,
+				(byte) 0b11_10_01,
+				};
+		for (int i = 0; i < ins.length; i++) {
+			byte in = ins[i];
+			int out = (in & 0b00_00_01) << 31;
+			out >>= 3;
+			out >>>= 1;
+			out |= (in & 0b00_00_10) << 30;
+			out >>= 3;
+			out >>>= 1;
+			out |= (in & 0b00_01_00) << 29;
+			out >>= 3;
+			out >>>= 1;
+			out |= (in & 0b00_10_00) << 28;
+			out >>= 3;
+			out >>>= 1;
+			out |= (in & 0b01_00_00) << 27;
+			out >>= 3;
+			out >>>= 1;
+			out |= (in & 0b10_00_00) << 26;
+			out >>= 3;
+			out >>>= 8;
+			out |= 0xee << 24;
+			System.out.println(i + ": 0b" + Long.toBinaryString(in) + " > 0x" + Integer.toHexString(out));
+		}
 	}
 	
 	private static void idRegexTest() {

@@ -6,7 +6,7 @@ import java.util.Map;
 public interface ImmutableMoodProvider extends Provider {
 	
 	//Methods {
-	MoodEnum getMood(RegionEnum reg);
+	MoodData getMood(RegionEnum reg);
 	//} Methods
 	
 	//Getter {
@@ -21,18 +21,18 @@ public interface ImmutableMoodProvider extends Provider {
 	//} Getter
 	
 	//Classes {
-	class Default extends Provider.Default<MoodEnum> implements ImmutableMoodProvider {
+	class Default extends Provider.Default<MoodData> implements ImmutableMoodProvider {
 		
 		//Constructor {
 		public Default() {
 			super(null, null, null, null);
 		}
 		
-		protected Default(Map<RegionEnum, MoodEnum> moods) {
+		protected Default(Map<RegionEnum, MoodData> moods) {
 			super(moods);
 		}
 		
-		public Default(MoodEnum leftEye, MoodEnum rightEye, MoodEnum smile, MoodEnum deco) {
+		public Default(MoodData leftEye, MoodData rightEye, MoodData smile, MoodData deco) {
 			super(leftEye, rightEye, smile, deco);
 		}
 		
@@ -42,7 +42,7 @@ public interface ImmutableMoodProvider extends Provider {
 		//} Constructor
 		
 		//Methods {
-		private static Map<RegionEnum, MoodEnum> makeMap(ImmutableMoodProvider prov) {
+		private static Map<RegionEnum, MoodData> makeMap(ImmutableMoodProvider prov) {
 			if (prov == null) return Map.of();
 			return makeMap(
 					prov.getMood(RegionEnum.LEFT_EYE),
@@ -55,7 +55,7 @@ public interface ImmutableMoodProvider extends Provider {
 		
 		//Overrides {
 		@Override
-		public MoodEnum getMood(RegionEnum reg) {
+		public MoodData getMood(RegionEnum reg) {
 			return map.get(reg);
 		}
 		//} Overrides

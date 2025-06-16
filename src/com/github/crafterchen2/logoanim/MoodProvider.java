@@ -5,7 +5,7 @@ import java.util.HashMap;
 //Interfaces {
 public interface MoodProvider extends ImmutableMoodProvider {
 	//Methods {
-	void setMood(RegionEnum reg, MoodEnum mood);
+	void setMood(RegionEnum reg, MoodData mood);
 	//} Methods
 	
 	//Setter {
@@ -37,7 +37,7 @@ public interface MoodProvider extends ImmutableMoodProvider {
 			this(null, null, null, null);
 		}
 		
-		public Default(MoodEnum leftEye, MoodEnum rightEye, MoodEnum smile, MoodEnum deco) {
+		public Default(MoodData leftEye, MoodData rightEye, MoodData smile, MoodData deco) {
 			super(HashMap.newHashMap(RegionEnum.values().length));
 			setMood(RegionEnum.LEFT_EYE, leftEye);
 			setMood(RegionEnum.RIGHT_EYE, rightEye);
@@ -53,7 +53,7 @@ public interface MoodProvider extends ImmutableMoodProvider {
 		
 		//Overrides {
 		@Override
-		public void setMood(RegionEnum reg, MoodEnum mood) {
+		public void setMood(RegionEnum reg, MoodData mood) {
 			map.put(reg, mood);
 		}
 		//} Overrides

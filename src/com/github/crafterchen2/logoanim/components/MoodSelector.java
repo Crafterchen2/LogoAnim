@@ -1,5 +1,6 @@
 package com.github.crafterchen2.logoanim.components;
 
+import com.github.crafterchen2.logoanim.MoodData;
 import com.github.crafterchen2.logoanim.MoodEnum;
 import com.github.crafterchen2.logoanim.MoodProvider;
 import com.github.crafterchen2.logoanim.RegionEnum;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 public class MoodSelector extends Selector implements MoodProvider {
 	
 	//Fields {
-	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, MoodData> moods = HashMap.newHashMap(RegionEnum.values().length);
 	private final ArrayList<Listener> listeners = new ArrayList<>();
 	//} Fields
 	
@@ -38,7 +39,7 @@ public class MoodSelector extends Selector implements MoodProvider {
 			JPanel panel = new JPanel(new GridLayout(0, sqrtMoods, innerMargin, innerMargin));
 			panel.setOpaque(false);
 			panel.add(new MoodButton(reg, null));
-			for (MoodEnum mood : MoodEnum.values()) {
+			for (MoodData mood : MoodEnum.values()) {
 				panel.add(new MoodButton(reg, mood));
 			}
 			add(panel);
@@ -63,20 +64,20 @@ public class MoodSelector extends Selector implements MoodProvider {
 	
 	private Color safeGetMoodColor(RegionEnum reg) {
 		if (!isEnabled()) return disabledColor;
-		MoodEnum mood = getMood(reg);
+		MoodData mood = getMood(reg);
 		return (mood != null) ? mood.getColor() : new Color(0, 0, 0);
 	}
 	//} Methods
 	
 	//Overrides {
-	public void setMood(RegionEnum reg, MoodEnum mood) {
+	public void setMood(RegionEnum reg, MoodData mood) {
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
 		moods.put(reg, mood);
 		repaint();
 		signalUpdate();
 	}
 	
-	public MoodEnum getMood(RegionEnum reg) {
+	public MoodData getMood(RegionEnum reg) {
 		if (reg == null) throw new IllegalArgumentException("reg must not be null.");
 		return moods.get(reg);
 	}
@@ -97,10 +98,10 @@ public class MoodSelector extends Selector implements MoodProvider {
 	//} Overrides
 	
 	//Classes {
-	private class MoodButton extends SelectorButton<MoodEnum> {
+	private class MoodButton extends SelectorButton<MoodData> {
 		
 		//Constructor {
-		public MoodButton(RegionEnum reg, MoodEnum subject) {
+		public MoodButton(RegionEnum reg, MoodData subject) {
 			super(reg, subject);
 			//setBorder(BorderFactory.createLineBorder(new Color(96, 96, 96), 3));
 			addActionListener(_ -> setMood(reg, subject));

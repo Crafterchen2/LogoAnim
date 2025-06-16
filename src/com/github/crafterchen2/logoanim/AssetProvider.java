@@ -5,7 +5,7 @@ import java.util.HashMap;
 //Interfaces {
 public interface AssetProvider extends ImmutableAssetProvider {
 	//Methods {
-	void setAsset(RegionEnum reg, AssetEnum asset);
+	void setAsset(RegionEnum reg, AssetData asset);
 	//} Methods
 	
 	//Setter {
@@ -37,7 +37,7 @@ public interface AssetProvider extends ImmutableAssetProvider {
 			this(null, null, null, null);
 		}
 		
-		public Default(AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco) {
+		public Default(AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco) {
 			super(HashMap.newHashMap(RegionEnum.values().length));
 			setAsset(RegionEnum.LEFT_EYE, leftEye);
 			setAsset(RegionEnum.RIGHT_EYE, rightEye);
@@ -53,7 +53,7 @@ public interface AssetProvider extends ImmutableAssetProvider {
 		
 		//Overrides {
 		@Override
-		public void setAsset(RegionEnum reg, AssetEnum asset) {
+		public void setAsset(RegionEnum reg, AssetData asset) {
 			map.put(reg, asset);
 		}
 		//} Overrides

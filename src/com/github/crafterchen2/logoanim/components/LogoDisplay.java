@@ -10,8 +10,8 @@ import java.util.HashMap;
 public class LogoDisplay extends JComponent implements AssetProvider, MoodProvider {
 	
 	//Fields {
-	private final HashMap<RegionEnum, AssetEnum> assets = HashMap.newHashMap(RegionEnum.values().length);
-	private final HashMap<RegionEnum, MoodEnum> moods = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, AssetData> assets = HashMap.newHashMap(RegionEnum.values().length);
+	private final HashMap<RegionEnum, MoodData> moods = HashMap.newHashMap(RegionEnum.values().length);
 	
 	public boolean blink = false;
 	//} Fields
@@ -42,28 +42,28 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 		RegionEnum[] regs = RegionEnum.values();
 		for (int i = regs.length - 1; i >= 0; i--) {
 			if (regs[i].type == AssetType.EYE && blink) continue;
-			AssetEnum asset = getAsset(regs[i]);
+			AssetData asset = getAsset(regs[i]);
 			if (asset != null) asset.paint(g, regs[i], getMood(regs[i]));
 		}
 	}
 	
 	@Override
-	public MoodEnum getMood(RegionEnum reg) {
+	public MoodData getMood(RegionEnum reg) {
 		return moods.get(reg);
 	}
 	
 	@Override
-	public AssetEnum getAsset(RegionEnum reg) {
+	public AssetData getAsset(RegionEnum reg) {
 		return assets.get(reg);
 	}
 	
 	@Override
-	public void setMood(RegionEnum reg, MoodEnum mood) {
+	public void setMood(RegionEnum reg, MoodData mood) {
 		moods.put(reg, mood);
 	}
 	
 	@Override
-	public void setAsset(RegionEnum reg, AssetEnum asset) {
+	public void setAsset(RegionEnum reg, AssetData asset) {
 		assets.put(reg, asset);
 	}
 	//} Overrides

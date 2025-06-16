@@ -3,7 +3,7 @@ package com.github.crafterchen2.logoanim;
 import java.awt.*;
 
 //Enums {
-public enum MoodEnum {
+public enum MoodEnum implements MoodData {
 	
 	NORMAL(new Color(0, 0, 255)),
 	SANS(new Color(0, 255, 255)),
@@ -24,6 +24,7 @@ public enum MoodEnum {
 	//} Constructor
 	
 	//Getter {
+	@Override
 	public Color getColor() {
 		return color;
 	}

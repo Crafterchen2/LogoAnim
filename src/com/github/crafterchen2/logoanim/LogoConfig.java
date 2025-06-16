@@ -25,12 +25,12 @@ public class LogoConfig implements ImmutableAssetProvider, ImmutableMoodProvider
 	
 	//Overrides {
 	@Override
-	public AssetEnum getAsset(RegionEnum reg) {
+	public AssetData getAsset(RegionEnum reg) {
 		return asset.getAsset(reg);
 	}
 	
 	@Override
-	public MoodEnum getMood(RegionEnum reg) {
+	public MoodData getMood(RegionEnum reg) {
 		return mood.getMood(reg);
 	}
 	//} Overrides

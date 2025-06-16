@@ -16,14 +16,14 @@ public class Main {
 		if (help || list) System.exit(0);
 		int defIndex = args.length;
 		int scale = DEFAULT.scale;
-		AssetEnum leftEye = DEFAULT.getAsset(RegionEnum.LEFT_EYE);
-		AssetEnum rightEye = DEFAULT.getAsset(RegionEnum.RIGHT_EYE);
-		AssetEnum smile = DEFAULT.getAsset(RegionEnum.SMILE);
-		AssetEnum deco = DEFAULT.getAsset(RegionEnum.DECO);
-		MoodEnum leftEyeMood = DEFAULT.getMood(RegionEnum.LEFT_EYE);
-		MoodEnum rightEyeMood = DEFAULT.getMood(RegionEnum.RIGHT_EYE);
-		MoodEnum smileMood = DEFAULT.getMood(RegionEnum.SMILE);
-		MoodEnum decoMood = DEFAULT.getMood(RegionEnum.DECO);
+		AssetData leftEye = DEFAULT.getAsset(RegionEnum.LEFT_EYE);
+		AssetData rightEye = DEFAULT.getAsset(RegionEnum.RIGHT_EYE);
+		AssetData smile = DEFAULT.getAsset(RegionEnum.SMILE);
+		AssetData deco = DEFAULT.getAsset(RegionEnum.DECO);
+		MoodData leftEyeMood = DEFAULT.getMood(RegionEnum.LEFT_EYE);
+		MoodData rightEyeMood = DEFAULT.getMood(RegionEnum.RIGHT_EYE);
+		MoodData smileMood = DEFAULT.getMood(RegionEnum.SMILE);
+		MoodData decoMood = DEFAULT.getMood(RegionEnum.DECO);
 		boolean blink = DEFAULT.blink;
 		for (int i = 0; i < args.length; i++) {
 			if (!args[i].startsWith("-")) {
@@ -84,7 +84,7 @@ public class Main {
 		if (Parser.arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}
 	
-	private static void launchRemoteOnly(AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco, MoodEnum leftEyeMood, MoodEnum rightEyeMood, MoodEnum smileMood, MoodEnum decoMood, boolean blink){
+	private static void launchRemoteOnly(AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco, MoodData leftEyeMood, MoodData rightEyeMood, MoodData smileMood, MoodData decoMood, boolean blink){
 		
 	}
 	
@@ -99,9 +99,9 @@ public class Main {
 	}
 	
 	private static void printAssets(AssetType type, String offset) {
-		AssetEnum[] values = AssetEnum.values();
+		AssetData[] values = AssetEnum.values();
 		String toPrint = null;
-		for (AssetEnum value : values) {
+		for (AssetData value : values) {
 			if (value.getType() == type) {
 				if (toPrint != null) System.out.println(offset + "├ " + toPrint);
 				toPrint = value.toString();
@@ -133,9 +133,9 @@ public class Main {
 		System.out.println("├ List of possible default mood values:");
 		System.out.println("│ ├ " + NULL + " (= don't recolor the asset)");
 		System.out.println("│ ├ " + KEEP + " (= don't override the recoloration)");
-		MoodEnum[] moodEnums = MoodEnum.values();
-		for (int i = 0; i < moodEnums.length; i++) {
-			System.out.println("│ " + ((i == moodEnums.length - 1) ? '└' : '├') + " " + moodEnums[i]);
+		MoodData[] moodData = MoodEnum.values();
+		for (int i = 0; i < moodData.length; i++) {
+			System.out.println("│ " + ((i == moodData.length - 1) ? '└' : '├') + " " + moodData[i]);
 		}
 		System.out.println("└ Blink:");
 		System.out.println("  ├ " + KEEP + " (= don't override the blink setting)");
