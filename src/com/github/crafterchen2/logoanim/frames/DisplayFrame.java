@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public abstract class DisplayFrame extends JFrame implements AssetProvider, MoodProvider {
@@ -22,12 +23,13 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	protected final Timer blinkTimer;
 	protected final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	protected final LogoDisplay display;
+	private final ArrayList<LogoChangedListener> listeners = new ArrayList<>();
 	
 	public DisplayFrame(String title) throws HeadlessException {
 		this(title, null, null);
 	}
 	
-	public DisplayFrame(String title, AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
+	public DisplayFrame(String title, ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) throws HeadlessException {
 		super(title);
 		display = new LogoDisplay(defAssets, defMoods);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -55,6 +57,20 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		blinkTimer.stop();
 		applyMouseAdapter();
 		setVisible(true);		
+	}
+	
+	public void addLogoChangedListener(LogoChangedListener listener) {
+		Objects.requireNonNull(listener);
+		listeners.add(listener);
+	}
+	
+	public void removeLogoChangedListener(LogoChangedListener listener) {
+		Objects.requireNonNull(listener);
+		listeners.remove(listener);
+	}
+	
+	private void notifyListeners(){
+		if (!listeners.isEmpty()) listeners.forEach(LogoChangedListener::logoChanged);
 	}
 	
 	protected void applyMouseAdapter() {
@@ -92,11 +108,13 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	@Override
 	public void setAsset(RegionEnum reg, AssetData asset) {
 		display.setAsset(reg, asset);
+		notifyListeners();
 	}
 	
 	@Override
 	public void setMood(RegionEnum reg, MoodData mood) {
 		display.setMood(reg, mood);
+		notifyListeners();
 	}
 	
 	@Override

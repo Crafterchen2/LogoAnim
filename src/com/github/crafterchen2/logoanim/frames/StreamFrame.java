@@ -1,8 +1,11 @@
 package com.github.crafterchen2.logoanim.frames;
 
+import com.github.crafterchen2.logoanim.AssetEnum;
 import com.github.crafterchen2.logoanim.AssetProvider;
+import com.github.crafterchen2.logoanim.MoodEnum;
 import com.github.crafterchen2.logoanim.JavaFxWrapper;
 import com.github.crafterchen2.logoanim.MoodProvider;
+import com.github.crafterchen2.logoanim.components.LogoDisplay;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,18 +13,17 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
-//Classes {
 public class StreamFrame extends DisplayFrame {
 	
-	//Fields {
-	private final BufferedImage bgImg;
 	private int scale;
-	//} Fields
+	private final BufferedImage bgImg;
 	
-	//Constructor {
 	public StreamFrame() throws HeadlessException {
 		this(true);
 	}
@@ -55,19 +57,15 @@ public class StreamFrame extends DisplayFrame {
 		loadFrameIcon(this, "streaming_frame_icon");
 		repaint();
 	}
-	//} Constructor
 	
-	//Methods {
 	private JPanel makeContentPane() {
 		return new JPanel(true) {
-			//Overrides {
 			@Override
 			protected void paintComponent(Graphics g) {
 				final int w = bgImg.getWidth() * getScale();
 				final int h = bgImg.getHeight() * getScale();
 				g.drawImage(bgImg, 0, 0, w, h, null);
 			}
-			//} Overrides
 		};
 	}
 	
@@ -87,25 +85,10 @@ public class StreamFrame extends DisplayFrame {
 		int scale = getScale();
 		return new Rectangle((bgImg.getWidth() - indent) * scale, (bgImg.getHeight() - indent) * scale, logo * scale, logo * scale);
 	}
-	//} Methods
 	
-	//Getter {
-	private boolean isFullscreen() {
-		return getScale() == getMaxScale();
-	}
-	//} Getter
-	
-	//Setter {
-	public void setFullscreen(boolean fullscreen) {
-		setScale((fullscreen) ? getMaxScale() : getMinScale());
-	}
-	//} Setter
-	
-	//Overrides {
 	@Override
 	protected void applyMouseAdapter() {
 		DisplayMouseAdapter mouseAdapter = new DisplayMouseAdapter(makeMenu(), this) {
-			//Overrides {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (isFullscreen()) return;
@@ -120,7 +103,6 @@ public class StreamFrame extends DisplayFrame {
 					super.mouseClicked(e);
 				}
 			}
-			//} Overrides
 		};
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
@@ -135,9 +117,17 @@ public class StreamFrame extends DisplayFrame {
 		return menu;
 	}
 	
+	private boolean isFullscreen() {
+		return getScale() == getMaxScale();
+	}
+	
 	@Override
 	public int getScale() {
 		return scale;
+	}
+	
+	public void setFullscreen(boolean fullscreen) {
+		setScale((fullscreen) ? getMaxScale() : getMinScale());
 	}
 	
 	@Override
@@ -160,19 +150,14 @@ public class StreamFrame extends DisplayFrame {
 	public int getMinScale() {
 		return 1;
 	}
-	//} Overrides
 	
-	//Classes {
 	private class RootLayout implements LayoutManager {
 		
-		//Fields {
 		public static final String CHAT = "chat";
 		public static final String LOGO = "logo";
 		
 		private final HashMap<Component, String> map = HashMap.newHashMap(2);
-		//} Fields
 		
-		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
 			if (name == null || (!name.equals(CHAT) && !name.equals(LOGO))) throw new IllegalArgumentException("Illegal key for layout");
@@ -209,21 +194,19 @@ public class StreamFrame extends DisplayFrame {
 				}
 			}
 		}
-		//} Overrides
 		
 	}
 	
 	private class LogoLayout implements LayoutManager {
 		
-		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
-			
+		
 		}
 		
 		@Override
 		public void removeLayoutComponent(Component comp) {
-			
+		
 		}
 		
 		@Override
@@ -246,8 +229,5 @@ public class StreamFrame extends DisplayFrame {
 				}
 			}
 		}
-		//} Overrides
 	}
-	//} Classes
 }
-//} Classes

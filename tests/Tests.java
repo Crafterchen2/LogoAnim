@@ -1,8 +1,6 @@
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.components.AssetSelector;
-import com.github.crafterchen2.logoanim.components.LogoDisplay;
-import com.github.crafterchen2.logoanim.components.MoodSelector;
-import com.github.crafterchen2.logoanim.frames.StreamFrame;
+import com.github.crafterchen2.logoanim.components.*;
+import com.github.crafterchen2.logoanim.frames.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +17,13 @@ public class Tests {
 		//idRegexTest();
 		colorParseTest();
 		colorParseTestFor();
+		//regexTest();
+		//addingTest();
+		//managerLayoutTest();
+		serverTest();
+		//clientTest();
+		//clientTest();
+		//clientTest();
 	}
 	
 	/**
@@ -97,7 +102,7 @@ public class Tests {
 				"O_1z0:UhvY2Y",
 				"https://www.youtube.com/watch?v=O_1z0:UhvY2",
 				"O_1z0:UhvY2",
-		};
+				};
 		
 		for (String text : texts) {
 			if (!text.matches(".*[A-Za-z0-9_-]{11}$")) {
@@ -107,6 +112,73 @@ public class Tests {
 			text = text.replaceFirst(".*(?=[A-Za-z0-9_-]{11}$)", "");
 			System.out.println(text);
 		}
+	}
+	
+	private static void regexTest(){
+		String[] strings = new String[] { //In comment = wanted result
+										  "123.123.123.123:7777", //["123.123.123.123", "7777"]
+										  "hallo.de:7777", //["hallo.de", "7777"]
+										  "123.123.123.123:", //["123.123.123.123"]
+										  "hallo.de:", //["hallo.de"]
+										  "123.123.123.123", //["123.123.123.123"]
+										  "hallo.de", //["hallo.de"]
+										  "23:23:23:23:23:23:23:23", //["23:23:23:23:23:23:23:23"]
+										  "[23:23:23:23:23:23:23:23]:7777", //["23:23:23:23:23:23:23:23", "7777"]
+										  "23:23::23:23:23:23", //["23:23::23:23:23:23"]
+										  "[23:23::23:23:23:23]:7777", //["23:23::23:23:23:23", "7777"]
+										  "[23:23::23:23:23:23]::7777", //["[23:23::23:23:23:23]::7777"]
+										  "[23:23::23:23:23:23]::77:e:77", //["[23:23::23:23:23:23]::77:e:77"]
+										  "[23:23::23:23:23:23]::77:e77", //["[23:23::23:23:23:23]::77:e77"]
+		};
+		for (int i = 0; i < strings.length; i++) {
+			String[] parts = strings[i].split(":(?=\\d+$)", 2);
+			System.out.println(i + ": " + strings[i] + " => " + Arrays.toString(parts));
+		}
+	}
+	
+	private static void addingTest(){
+		JFrame frame = new JFrame("Adding Test");
+		frame.setSize(300,600);
+		frame.setResizable(false);
+		frame.setLocationRelativeTo(null);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		JPanel panel = new JPanel(new GridLayout(0,1));
+		JButton adder = new JButton("add");
+		adder.addActionListener(e -> {
+			panel.add(new JButton("Button"));
+			panel.repaint();
+		});
+		panel.add(adder);
+		frame.setContentPane(panel);
+		frame.setVisible(true);
+	}
+	
+	private static void managerLayoutTest(){
+		JFrame frame = new JFrame("managerLayoutTest");
+		frame.setSize(300,600);
+		frame.setResizable(false);
+		frame.setLocationRelativeTo(null);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		JPanel content = new JPanel(new VerticalListLayout());
+		for (int i = 0; i < 10; i++) {
+			JButton button = new JButton("Button");
+			button.setSize(new Dimension(40 * 6, 40));
+			content.add(button);
+		}
+		frame.setContentPane(content);
+		frame.setVisible(true);
+	}
+	
+	private static void serverTest(){
+		new RemoteManagerFrame(null);
+	}
+	
+	private static void clientTest(){
+		LogoFrame logo = new LogoFrame();
+		logo.setScale(20);
+		new ClientConnectorFrame(logo);
+		//new ClientConnectorFrame(null);
+		//new PresetLibraryFrame(logo);
 	}
 	
 	private static void testStream(){

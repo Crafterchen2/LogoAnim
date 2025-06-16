@@ -16,7 +16,7 @@ public class LogoFrame extends DisplayFrame {
 		this(20, null, null);
 	}
 	
-	public LogoFrame(int scale, AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
+	public LogoFrame(int scale, ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) throws HeadlessException {
 		super("Logo Display", defAssets, defMoods);
 		setScale(scale);
 		setContentPane(display);

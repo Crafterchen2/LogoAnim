@@ -3,38 +3,33 @@ package com.github.crafterchen2.logoanim.remote;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 
 public class ServerConnection {
 
     private final ServerSocket serverSocket;
-    private final ArrayList<MessageListener> messageListeners = new ArrayList<>();
-    private final ArrayList<RefuseListener> refuseListeners = new ArrayList<>();
+    private final RequestHandler requestHandler;
     private final Thread thread = new Thread(this::mainLoop);
 
-    public ServerConnection(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
-        serverSocket.setSoTimeout(1);
+    public ServerConnection(RequestHandler requestHandler) throws IOException {
+        this.serverSocket = new ServerSocket(0);
+        this.requestHandler = requestHandler;
+        serverSocket.setSoTimeout(1000);
     }
 
     public void close() throws IOException {
         if (thread.isAlive()) {
             thread.interrupt();
         }
-        while (thread.isAlive()) {
-        }
+        while (thread.isAlive()); // Wait for the thread to exit
         serverSocket.close();
     }
-
-    public void addMessageListener(MessageListener listener) {
-        messageListeners.add(listener);
-    }
-
-    public void addRefuseListener(RefuseListener listener) {
-        refuseListeners.add(listener);
+    
+    public int getLocalPort(){
+        return serverSocket.getLocalPort();
     }
 
     private void mainLoop() {
@@ -42,27 +37,25 @@ public class ServerConnection {
             while (!thread.isInterrupted()) {
                 try {
                     Socket client = serverSocket.accept();
-                    if (ConnectionManager.isInWhitelist(client.getInetAddress().toString())) {
+                    if (NetworkingDetails.isInWhitelist(client.getInetAddress().toString())) {
                         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
                         int version = Integer.parseInt(in.readLine());
-                        String alias = in.readLine();
-                        String message = in.readLine();
-                        if (version == ConnectionManager.VERSION) {
-                            for (MessageListener listener : messageListeners) {
-                                listener.handleMessage(new SocketInfo(client, alias), message);
-                            }
-                        }else {
-                            for (RefuseListener listener : refuseListeners) {
-                                listener.handleRefuse(new SocketInfo(client, alias), RefuseReason.INCORRECT_VERSION);
-                            }
+                        if (version == NetworkingDetails.VERSION) {
+                            String alias = in.readLine();
+                            String message = in.readLine();
+                            String response = requestHandler.handleMessage(new SocketInfo(client, alias), message);
+                            PrintWriter out = new PrintWriter(client.getOutputStream(), true);
+                            out.println(response);
+                            out.close();
+                        } else {
+                            requestHandler.handleRefuse(new SocketInfo(client, null), RefuseReason.INCORRECT_VERSION);
                         }
+                        in.close();
                         client.close();
                     } else {
-                        for (RefuseListener listener : refuseListeners) {
-                            listener.handleRefuse(new SocketInfo(client,null), RefuseReason.NOT_WHITELISTED);
-                        }
+                        requestHandler.handleRefuse(new SocketInfo(client, null), RefuseReason.NOT_WHITELISTED);
                     }
-                } catch (SocketTimeoutException timeoutException) {
+                } catch (SocketTimeoutException _) {
                 }
             }
         } catch (IOException e) {
@@ -70,7 +63,7 @@ public class ServerConnection {
         }
     }
 
-    public void start() throws RuntimeException {
+    public void start() {
         if (thread.isAlive()) {
             throw new RuntimeException("Thread already running");
         } else {
@@ -86,17 +79,15 @@ public class ServerConnection {
 
     }
 
-    public interface MessageListener {
-        void handleMessage(SocketInfo socket, String msg);
-    }
+    public interface RequestHandler {
 
-    public interface RefuseListener {
+        String handleMessage(SocketInfo socket, String msg);
         void handleRefuse(SocketInfo socket, RefuseReason reason);
+
     }
 
     public enum RefuseReason {
-        INCORRECT_VERSION,
-        NOT_WHITELISTED
+        INCORRECT_VERSION, NOT_WHITELISTED
     }
 
 }

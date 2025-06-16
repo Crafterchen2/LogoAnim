@@ -2,17 +2,16 @@ package com.github.crafterchen2.logoanim;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Objects;
 
 //Classes {
-public class Parser {
+public abstract class Parser {
 	
 	//Fields {
 	public static final int FULLSCREEN = -2;
 	public static final String KEEP = "keep";
 	public static final String NULL = "null";
-	public static final String CSV_KEY = "leftEye, rightEye, smile, deco, leftEyeMood, rightEyeMood, smileMood, decoMood";
-	public static final String CSV_FULL_KEY = "scale, blink, " + CSV_KEY;
 	public static final FullLogoConfig DEFAULT = new FullLogoConfig(
 			20, true,
 			new ImmutableAssetProvider.Default(AssetEnum.EYE_2X2, AssetEnum.EYE_2X2, AssetEnum.NORMAL, null),
@@ -20,38 +19,93 @@ public class Parser {
 	);
 	//} Fields
 	
-	//Constructor {
-	public Parser() {
-		
-	}
-	//} Constructor
-	
 	//Methods {
-	private static FullLogoConfig parseFullLogo(String entry) {
-		String[] arr = entry.split(", ", 3);
+	public static LogoConfig parseLogo(String string, LogoConfig def) {
+		if (string == null || string.isBlank() || string.contentEquals(NULL)) return parseLogo(null, null, def);
+		return parseLogo(string.split(" "), def);
+	}
+	
+	public static LogoConfig parseLogo(String[] assetsMoods, LogoConfig def) {
+		if (assetsMoods == null) return parseLogo(null, null, def);
+		int l = RegionEnum.values().length;
+		if (assetsMoods.length <= l) {
+			return parseLogo(assetsMoods, null, def);
+		} else {
+			String[] assets = Arrays.copyOfRange(assetsMoods, 0, l);
+			String[] moods = Arrays.copyOfRange(assetsMoods, l, l * 2);
+			return parseLogo(assets, moods, def);
+		}
+	}
+	
+	public static LogoConfig parseLogo(String[] assets, String[]moods, LogoConfig def) {
 		RegionEnum[] regs = RegionEnum.values();
-		int scale = parseScaleOrFullscreen(arr[0], DEFAULT.scale);
-		boolean blink = parseBlink(arr[1], DEFAULT.blink);
-		return new FullLogoConfig(scale, blink, parseLogo(arr[2]));
+		int l = regs.length;
+		if (assets != null) {
+			if (assets.length != l) assets = Arrays.copyOf(assets, l);
+		} else {
+			assets = new String[l];
+		}
+		if (moods != null) {
+			if (moods.length != l) moods = Arrays.copyOf(moods, l);
+		} else {
+			moods = new String[l];
+		}
+		if (def == null) def = new LogoConfig();
+		AssetProvider aProv = new AssetProvider.Default();
+		MoodProvider mProv = new MoodProvider.Default();
+		for (int i = 0; i < l; i++) {
+			aProv.setAsset(regs[i], parseAsset(assets[i], regs[i].type, def.getAsset(regs[i])));
+		}
+		for (int i = 0; i < l; i++) {
+			mProv.setMood(regs[i], parseMood(moods[i], def.getMood(regs[i])));
+		}
+		return new LogoConfig(aProv, mProv);
+	}
+	
+	public static MoodData parseMood(String string, MoodData def) {
+		try {
+			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
+			if (string.contentEquals(KEEP)) return def;
+			return MoodEnum.valueOf(string);
+		} catch (Exception _) {
+			System.err.println(string + " is not a valid mood.");
+			System.exit(1);
+			return null;
+		}
+	}
+	
+	public static AssetData parseAsset(String string, AssetType validType, AssetData def) {
+		IllegalArgumentException exc = new IllegalArgumentException(string + " is not a valid asset with type " + validType + ".");
+		try {
+			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
+			if (string.contentEquals(KEEP)) return def;
+			AssetData parsed = AssetEnum.valueOf(string);
+			if (parsed.getType() != validType) {
+				throw exc;
+			}
+			return parsed;
+		} catch (Exception _) {
+			throw exc;
+		}
 	}
 	
 	/**
 	 Generates a LogoConfig with custom Mood- and AssetProvider to reflect bitmap and date given in the longs.
 	 
 	 @param meta Bitmap for the border and colors. Every mood consists of 6 bits in <code>[R|r|G|g|B|b]</code> format.
-	 			 this format converts to this opaque 32-bit ARGB color: <code>[0xFF|R*4|r*4|G*4|g*4|B*4|b*4]</code>.
-	 			 Overall order:
-	 			 <p><code>
-	 			 [version|border|leftEyeMood|rightEyeMood|smileMood|BorderMood]
-	 			 <p>
-	 			 [63...60|59..24|23.......18|17........12|11......6|5........0]
-	 			 </code>
+	 this format converts to this opaque 32-bit ARGB color: <code>[0xFF|R*4|r*4|G*4|g*4|B*4|b*4]</code>.
+	 Overall order:
+	 <p><code>
+	 [version|border|leftEyeMood|rightEyeMood|smileMood|BorderMood]
+	 <p>
+	 [63...60|59..24|23.......18|17........12|11......6|5........0]
+	 </code>
 	 @param face Bitmap for the face. Order:
-	 			 <p><code>
-	 			 [leftEye|rightEye|smile]
-	 			 <p>
-	 			 [63...48|47...32|31...0]
-	 			 </code>
+	 <p><code>
+	 [leftEye|rightEye|smile]
+	 <p>
+	 [63...48|47...32|31...0]
+	 </code>
 	 
 	 @return The decoded configuration.
 	 */
@@ -187,48 +241,6 @@ public class Parser {
 		}
 		rgb >>>= 7;
 		return new Color(rgb);
-	}
-	
-	private static LogoConfig parseLogo(String entry) {
-		String[] arr = entry.split(", ");
-		int iArr = 0;
-		RegionEnum[] regs = RegionEnum.values();
-		AssetProvider assets = new AssetProvider.Default();
-		MoodProvider moods = new MoodProvider.Default();
-		for (RegionEnum reg : regs) {
-			assets.setAsset(reg, parseAsset(arr[iArr++], reg.type, DEFAULT.getAsset(reg)));
-		}
-		for (RegionEnum reg : regs) {
-			moods.setMood(reg, parseMood(arr[iArr++], DEFAULT.getMood(reg)));
-		}
-		return new LogoConfig(new ImmutableAssetProvider.Default(assets), new ImmutableMoodProvider.Default(moods));
-	}
-	
-	public static MoodData parseMood(String string, MoodData def) {
-		try {
-			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
-			if (string.contentEquals(KEEP)) return def;
-			return MoodEnum.valueOf(string);
-		} catch (Exception _) {
-			System.err.println(string + " is not a valid mood.");
-			System.exit(1);
-			return null;
-		}
-	}
-	
-	public static AssetData parseAsset(String string, AssetType validType, AssetData def) {
-		IllegalArgumentException exc = new IllegalArgumentException(string + " is not a valid asset with type " + validType + ".");
-		try {
-			if (string == null || string.isBlank() || string.contentEquals(NULL)) return null;
-			if (string.contentEquals(KEEP)) return def;
-			AssetData parsed = AssetEnum.valueOf(string);
-			if (parsed.getType() != validType) {
-				throw exc;
-			}
-			return parsed;
-		} catch (Exception _) {
-			throw exc;
-		}
 	}
 	
 	public static int parseScaleOrFullscreen(String string, int def) {
