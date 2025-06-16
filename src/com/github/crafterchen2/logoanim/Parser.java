@@ -75,9 +75,7 @@ public class Parser {
 			//Fields {
 			final AssetData leftData = makeAssetData(leftMap, AssetType.EYE, meta, face);
 			final AssetData rightData = makeAssetData(rightMap, AssetType.EYE, meta, face);
-			;
 			final AssetData smileData = makeAssetData(smileMap, AssetType.SMILE, meta, face);
-			;
 			final AssetData borderData = makeAssetData(borderMap, meta, face);
 			//} Fields
 			
