@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="LogoAnim:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/LogoAnim_jar</output-path>
+    <root id="archive" name="LogoAnim.jar">
+      <element id="module-output" name="LogoAnim" />
+      <element id="library" level="application" name="javafx.base" />
+    </root>
+  </artifact>
+</component>
