@@ -25,18 +25,13 @@ public class LogoFrame extends DisplayFrame {
 	
 	@Override
 	protected void applyMouseAdapter() {
-		DisplayMouseAdapter mouseAdapter = new DisplayMouseAdapter(makeMenu(), this) {
-			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {
-				int wheelRotation = e.getWheelRotation();
-				if (getScale() + wheelRotation < getMinScale()) wheelRotation = Math.max(0, wheelRotation);
-				if (getScale() + wheelRotation > getMaxScale()) wheelRotation = Math.min(0, wheelRotation);
-				setScale(getScale() + wheelRotation);
-			}
-		};
-		addMouseWheelListener(mouseAdapter);
-		addMouseListener(mouseAdapter);
-		addMouseMotionListener(mouseAdapter);
+		super.applyMouseAdapter();
+		addMouseWheelListener(e -> {
+			int wheelRotation = e.getWheelRotation();
+			if (getScale() + wheelRotation < getMinScale()) wheelRotation = Math.max(0, wheelRotation);
+			if (getScale() + wheelRotation > getMaxScale()) wheelRotation = Math.min(0, wheelRotation);
+			setScale(getScale() + wheelRotation);
+		});
 	}
 	
 	@Override

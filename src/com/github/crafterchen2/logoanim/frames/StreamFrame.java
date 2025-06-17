@@ -1,11 +1,8 @@
 package com.github.crafterchen2.logoanim.frames;
 
-import com.github.crafterchen2.logoanim.AssetEnum;
 import com.github.crafterchen2.logoanim.AssetProvider;
-import com.github.crafterchen2.logoanim.MoodEnum;
 import com.github.crafterchen2.logoanim.JavaFxWrapper;
 import com.github.crafterchen2.logoanim.MoodProvider;
-import com.github.crafterchen2.logoanim.components.LogoDisplay;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,16 +10,14 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class StreamFrame extends DisplayFrame {
 	
 	private int scale;
 	private final BufferedImage bgImg;
+	private final JMenuItem toggleChat = new JMenuItem("Chat is booting...");
 	
 	public StreamFrame() throws HeadlessException {
 		this(true);
@@ -34,6 +29,8 @@ public class StreamFrame extends DisplayFrame {
 	
 	public StreamFrame(boolean fullscreen, AssetProvider defAssets, MoodProvider defMoods) throws HeadlessException {
 		super("Stream Background", defAssets, defMoods);
+		toggleChat.addActionListener(_ -> JavaFxWrapper.getWrapper().setControlVisibility(!JavaFxWrapper.getWrapper().getControlVisibility()));
+		toggleChat.setEnabled(false);
 		try {
 			bgImg = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/stream_bg.png")));
 			Objects.requireNonNull(bgImg);
@@ -43,23 +40,28 @@ public class StreamFrame extends DisplayFrame {
 		setFullscreen(fullscreen);
 		JPanel contentPane = makeContentPane();
 		{
-			contentPane.setLayout(new RootLayout());
 			JPanel logos = new JPanel(new LogoLayout());
 			{
 				logos.add(display);
 			}
 			contentPane.add(logos, RootLayout.LOGO);
-			JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-			contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
-			wrapper.setControlVisibility(true);
+			new Thread(() -> {
+				JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+				contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
+				toggleChat.setText("Toggle Chat Controller");
+				toggleChat.setEnabled(true);
+			}).start();
 		}
 		setContentPane(contentPane);
 		loadFrameIcon(this, "streaming_frame_icon");
+		addMenuEntry(-100, "Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
+		addMenuEntry(-100, toggleChat);
+		rebuildMenu();
 		repaint();
 	}
 	
 	private JPanel makeContentPane() {
-		return new JPanel(true) {
+		return new JPanel(new RootLayout(), true) {
 			@Override
 			protected void paintComponent(Graphics g) {
 				final int w = bgImg.getWidth() * getScale();
@@ -87,8 +89,8 @@ public class StreamFrame extends DisplayFrame {
 	}
 	
 	@Override
-	protected void applyMouseAdapter() {
-		DisplayMouseAdapter mouseAdapter = new DisplayMouseAdapter(makeMenu(), this) {
+	protected DisplayMouseAdapter makeMouseAdapter() {
+		return new DisplayMouseAdapter(this) {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (isFullscreen()) return;
@@ -104,17 +106,6 @@ public class StreamFrame extends DisplayFrame {
 				}
 			}
 		};
-		addMouseListener(mouseAdapter);
-		addMouseMotionListener(mouseAdapter);
-	}
-	
-	@Override
-	protected JMenu makeMenu() {
-		JMenu menu = super.makeMenu();
-		menu.addSeparator();
-		menu.add("Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
-		menu.add("Toggle Chat Controller").addActionListener(_ -> JavaFxWrapper.getWrapper().setControlVisibility(!JavaFxWrapper.getWrapper().getControlVisibility()));
-		return menu;
 	}
 	
 	private boolean isFullscreen() {

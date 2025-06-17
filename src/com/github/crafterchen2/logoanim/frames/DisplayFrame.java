@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public abstract class DisplayFrame extends JFrame implements AssetProvider, MoodProvider {
@@ -24,6 +25,8 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	protected final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	protected final LogoDisplay display;
 	private final ArrayList<LogoChangedListener> listeners = new ArrayList<>();
+	private final HashMap<Integer, ArrayList<Component>> menuEntries = HashMap.newHashMap(3);
+	private final DisplayMouseAdapter mouseAdapter;
 	
 	public DisplayFrame(String title) throws HeadlessException {
 		this(title, null, null);
@@ -32,7 +35,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	public DisplayFrame(String title, ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) throws HeadlessException {
 		super(title);
 		display = new LogoDisplay(defAssets, defMoods);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setUndecorated(true);
 		blinkBox.addActionListener(_ -> {
@@ -55,7 +58,16 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		);
 		blinkTimer.setRepeats(true);
 		blinkTimer.stop();
+		mouseAdapter = makeMouseAdapter();
 		applyMouseAdapter();
+		addMenuEntry(Integer.MAX_VALUE, blinkBox);
+		addMenuEntry(0,"Open new controller").addActionListener(_ -> new LogoControlFrame(this));
+		addMenuEntry(0,"Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
+		addMenuEntry(0,"Open new remote manager").addActionListener(_ -> new RemoteManagerFrame(this));
+		addMenuEntry(0,"Open new client connector").addActionListener(_ -> new ClientConnectorFrame(this));
+		addMenuEntry(Integer.MIN_VALUE + 100, "Copy to Clipboard").addActionListener(_ -> exportToClipboard());
+		addMenuEntry(Integer.MIN_VALUE, "Close").addActionListener(_ -> System.exit(0));
+		rebuildMenu();
 		setVisible(true);		
 	}
 	
@@ -74,27 +86,36 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	}
 	
 	protected void applyMouseAdapter() {
-		DisplayMouseAdapter mouseAdapter = new DisplayMouseAdapter(makeMenu(), this);
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
 	}
 	
-	protected JMenu makeMenu() {
-		JMenu menu = new JMenu();
-		JLabel title = new JLabel("Logo Animator Menu");
-		title.setFont(title.getFont().deriveFont(16f).deriveFont(Font.BOLD));
-		menu.add(title);
-		menu.addSeparator();
-		menu.add(blinkBox);
-		menu.addSeparator();
-		menu.add("Open new controller").addActionListener(_ -> new LogoControlFrame(this));
-		menu.add("Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
-		menu.addSeparator();
-		menu.add("Copy to Clipboard").addActionListener(_ -> exportToClipboard());
-		menu.addSeparator();
-		menu.add("Close").addActionListener(_ -> dispose());
-		menu.add("Close all windows").addActionListener(_ -> System.exit(0));
-		return menu;
+	protected DisplayMouseAdapter makeMouseAdapter() {
+		return new DisplayMouseAdapter(this);
+	}
+	
+	public void addMenuEntry(int prio, Component c) {
+		if (c == null) return;
+		ArrayList<Component> v = menuEntries.computeIfAbsent(prio, integer -> new ArrayList<>());
+		v.add(c);
+	}
+	
+	public JMenuItem addMenuEntry(int prio, String label) {
+		JMenuItem c = new JMenuItem(label);
+		ArrayList<Component> v = menuEntries.computeIfAbsent(prio, integer -> new ArrayList<>());
+		v.add(c);
+		return c;
+	}
+	
+	public void removeMenuEntry(int prio, Component c) {
+		ArrayList<Component> v = menuEntries.get(prio);
+		if (v == null) return;
+		v.remove(c);
+		if (v.isEmpty()) menuEntries.remove(prio);
+	}
+	
+	public void rebuildMenu(){
+		mouseAdapter.rebuildMenu();
 	}
 	
 	public abstract int getScale();
@@ -196,20 +217,36 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	
 	protected class DisplayMouseAdapter extends MouseAdapter {
 		
-		private final JMenu menu;
+		private final JMenu menu = new JMenu();
 		private final Component invoker;
 		private Point prev = null;
 		
-		public DisplayMouseAdapter(JMenu menu, Component invoker) {
-			this.menu = menu;
+		public DisplayMouseAdapter(Component invoker) {
+			menu.add(new JLabel("Default menu"));
 			this.invoker = invoker;
+		}
+		
+		public void rebuildMenu(){
+			menu.getPopupMenu().setVisible(false);
+			menu.removeAll();
+			JLabel title = new JLabel("Logo Animator Menu   ");
+			title.setFont(title.getFont().deriveFont(16f).deriveFont(Font.BOLD));
+			menu.add(title);
+			java.util.List<Integer> sortedKeys = menuEntries.keySet().stream().sorted((o1, o2) -> Integer.compare(o2, o1)).toList();
+			for (int k : sortedKeys) {
+				menu.addSeparator();
+				ArrayList<Component> v = menuEntries.get(k);
+				for (Component c : v) {
+					menu.add(c);
+				}
+			}
 		}
 		
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON3) {
 				blinkBox.setSelected(getShouldBlink());
-				menu.getPopupMenu().show(invoker, e.getX(), e.getY());
+				menu.getPopupMenu().show(invoker, e.getX() - 10, e.getY() - 10);
 			} else {
 				invoker.repaint();
 			}
@@ -231,5 +268,5 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 				prev = now;
 			}
 		}
-	}
+	}	
 }
