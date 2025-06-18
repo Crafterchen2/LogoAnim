@@ -84,7 +84,7 @@ public class Main {
 		if (Parser.arrContains(args, "-p", "--presets")) new PresetLibraryFrame(l);
 	}
 	
-	private static void launchRemoteOnly(AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco, MoodData leftEyeMood, MoodData rightEyeMood, MoodData smileMood, MoodData decoMood, boolean blink){
+	private static void launchRemoteOnly(AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco, MoodData leftEyeMood, MoodData rightEyeMood, MoodData smileMood, MoodData decoMood, boolean blink) {
 		
 	}
 	

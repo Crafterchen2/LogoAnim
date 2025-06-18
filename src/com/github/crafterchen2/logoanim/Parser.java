@@ -37,7 +37,7 @@ public abstract class Parser {
 		}
 	}
 	
-	public static LogoConfig parseLogo(String[] assets, String[]moods, LogoConfig def) {
+	public static LogoConfig parseLogo(String[] assets, String[] moods, LogoConfig def) {
 		RegionEnum[] regs = RegionEnum.values();
 		int l = regs.length;
 		if (assets != null) {

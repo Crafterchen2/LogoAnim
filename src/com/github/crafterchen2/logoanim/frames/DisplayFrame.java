@@ -20,14 +20,17 @@ import java.util.Objects;
 
 public abstract class DisplayFrame extends JFrame implements AssetProvider, MoodProvider {
 	
-	protected boolean shouldBlink = false;
+	//Fields {
 	protected final Timer blinkTimer;
 	protected final JCheckBox blinkBox = new JCheckBox("Enable blinking");
 	protected final LogoDisplay display;
 	private final ArrayList<LogoChangedListener> listeners = new ArrayList<>();
 	private final HashMap<Integer, ArrayList<Component>> menuEntries = HashMap.newHashMap(3);
 	private final DisplayMouseAdapter mouseAdapter;
+	protected boolean shouldBlink = false;
+	//} Fields
 	
+	//Constructor {
 	public DisplayFrame(String title) throws HeadlessException {
 		this(title, null, null);
 	}
@@ -61,13 +64,23 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		mouseAdapter = makeMouseAdapter();
 		applyMouseAdapter();
 		addMenuEntry(Integer.MAX_VALUE, blinkBox);
-		addMenuEntry(0,"Open new controller").addActionListener(_ -> new LogoControlFrame(this));
-		addMenuEntry(0,"Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
-		addMenuEntry(0,"Open new client connector").addActionListener(_ -> new ClientConnectorFrame(this));
+		addMenuEntry(0, "Open new controller").addActionListener(_ -> new LogoControlFrame(this));
+		addMenuEntry(0, "Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
+		addMenuEntry(0, "Open new client connector").addActionListener(_ -> new ClientConnectorFrame(this));
 		addMenuEntry(Integer.MIN_VALUE + 100, "Copy to Clipboard").addActionListener(_ -> exportToClipboard());
 		addMenuEntry(Integer.MIN_VALUE, "Close").addActionListener(_ -> System.exit(0));
 		rebuildMenu();
-		setVisible(true);		
+		setVisible(true);
+	}
+	//} Constructor
+	
+	//Methods {
+	public static void loadFrameIcon(JFrame frame, String name) {
+		try {
+			BufferedImage read = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + name + ".png")));
+			frame.setIconImage(read);
+		} catch (IOException ignored) {
+		}
 	}
 	
 	public void addLogoChangedListener(LogoChangedListener listener) {
@@ -80,7 +93,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		listeners.remove(listener);
 	}
 	
-	private void notifyListeners(){
+	private void notifyListeners() {
 		if (!listeners.isEmpty()) listeners.forEach(LogoChangedListener::logoChanged);
 	}
 	
@@ -113,18 +126,49 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		if (v.isEmpty()) menuEntries.remove(prio);
 	}
 	
-	public void rebuildMenu(){
+	public void rebuildMenu() {
 		mouseAdapter.rebuildMenu();
 	}
 	
-	public abstract int getScale();
+	protected void exportToClipboard() {
+		BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics g = img.getGraphics();
+		display.paint(g);
+		g.dispose();
+		Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
+		TransferableImage trans = new TransferableImage(img);
+		c.setContents(trans, null);
+	}
 	
-	public abstract void setScale(int scale);
+	//Getter {
+	public abstract int getScale();
 	
 	public abstract int getMaxScale();
 	
 	public abstract int getMinScale();
 	
+	public boolean getShouldBlink() {
+		return shouldBlink;
+	}
+	//} Getter
+	
+	//Setter {
+	public abstract void setScale(int scale);
+	
+	public void setShouldBlink(boolean shouldBlink) {
+		if (this.shouldBlink == shouldBlink && blinkTimer.isRunning() == shouldBlink) return;
+		this.shouldBlink = shouldBlink;
+		blinkBox.setSelected(this.shouldBlink);
+		if (this.shouldBlink) {
+			blinkTimer.start();
+		} else {
+			blinkTimer.stop();
+			display.blink = false;
+			repaint();
+		}
+	}
+	
+	//Overrides {
 	@Override
 	public void setAsset(RegionEnum reg, AssetData asset) {
 		display.setAsset(reg, asset);
@@ -142,49 +186,12 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		return display.getAsset(reg);
 	}
 	
-	//Overrides {
 	@Override
 	public MoodData getMood(RegionEnum reg) {
 		return display.getMood(reg);
 	}
 	
-	//Setter {
-	public void setShouldBlink(boolean shouldBlink) {
-		if (this.shouldBlink == shouldBlink && blinkTimer.isRunning() == shouldBlink) return;
-		this.shouldBlink = shouldBlink;
-		blinkBox.setSelected(this.shouldBlink);
-		if (this.shouldBlink) {
-			blinkTimer.start();
-		} else {
-			blinkTimer.stop();
-			display.blink = false;
-			repaint();
-		}
-	}
-	
-	public boolean getShouldBlink() {
-		return shouldBlink;
-	}
-	
-	protected void exportToClipboard() {
-		BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-		Graphics g = img.getGraphics();
-		display.paint(g);
-		g.dispose();
-		Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
-		TransferableImage trans = new TransferableImage(img);
-		c.setContents(trans, null);
-	}
-	
-	//Methods {
-	public static void loadFrameIcon(JFrame frame, String name) {
-		try {
-			BufferedImage read = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + name + ".png")));
-			frame.setIconImage(read);
-		} catch (IOException ignored) {
-		}
-	}
-	
+	//Classes {
 	protected record TransferableImage(Image i) implements Transferable {
 		
 		//Overrides {
@@ -216,16 +223,21 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	
 	protected class DisplayMouseAdapter extends MouseAdapter {
 		
+		//Fields {
 		private final JMenu menu = new JMenu();
 		private final Component invoker;
 		private Point prev = null;
+		//} Fields
 		
+		//Constructor {
 		public DisplayMouseAdapter(Component invoker) {
 			menu.add(new JLabel("Default menu"));
 			this.invoker = invoker;
 		}
+		//} Constructor
 		
-		public void rebuildMenu(){
+		//Methods {
+		public void rebuildMenu() {
 			menu.getPopupMenu().setVisible(false);
 			menu.removeAll();
 			JLabel title = new JLabel("Logo Animator Menu   ");
@@ -240,7 +252,9 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 				}
 			}
 		}
+		//} Methods
 		
+		//Overrides {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON3) {
@@ -267,5 +281,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 				prev = now;
 			}
 		}
-	}	
+		//} Overrides
+	}
+	//} Classes
 }

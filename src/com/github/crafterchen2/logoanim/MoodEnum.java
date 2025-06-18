@@ -24,10 +24,13 @@ public enum MoodEnum implements MoodData {
 	//} Constructor
 	
 	//Getter {
+	//} Getter
+	
+	//Overrides {
 	@Override
 	public Color getColor() {
 		return color;
 	}
-	//} Getter
+	//} Overrides
 }
 //} Enums

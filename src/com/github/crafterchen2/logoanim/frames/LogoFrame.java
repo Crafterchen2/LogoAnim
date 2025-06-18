@@ -1,13 +1,15 @@
 package com.github.crafterchen2.logoanim.frames;
 
-import com.github.crafterchen2.logoanim.*;
+import com.github.crafterchen2.logoanim.ImmutableAssetProvider;
+import com.github.crafterchen2.logoanim.ImmutableMoodProvider;
+import com.github.crafterchen2.logoanim.RegionEnum;
 
 import java.awt.*;
-import java.awt.event.MouseWheelEvent;
 
 //Classes {
 public class LogoFrame extends DisplayFrame {
 	
+	//Fields {
 	private int scale = 20;
 	//} Fields
 	
@@ -22,7 +24,9 @@ public class LogoFrame extends DisplayFrame {
 		setContentPane(display);
 		loadFrameIcon(this, "logo_frame_icon");
 	}
+	//} Constructor
 	
+	//Overrides {
 	@Override
 	protected void applyMouseAdapter() {
 		super.applyMouseAdapter();
@@ -54,4 +58,6 @@ public class LogoFrame extends DisplayFrame {
 	public int getMinScale() {
 		return RegionEnum.base;
 	}
+	//} Overrides
 }
+//} Classes

@@ -43,8 +43,8 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		super(new BorderLayout());
 		this.streamFrame = streamFrame;
 		addRemoteConnectionListener(this);
-		ipLabel.setBorder(BorderFactory.createMatteBorder(0,0,1,0, new Color(0xA6A6A6)));
-		portLabel.setBorder(BorderFactory.createMatteBorder(1,0,0,0, new Color(0xFFFFFF)));
+		ipLabel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0xA6A6A6)));
+		portLabel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xFFFFFF)));
 		Insets buttonInsets = new Insets(5, 1, 5, 1);
 		JButton kickAll = new JButton("Kick all");
 		JButton closeConnection = new JButton("Close connection");
@@ -174,10 +174,12 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 	}
 	//} Methods
 	
+	//Getter {
 	public String getIpPort() {
 		//BUG: ipLabel does not only contain the ip, retrieve the ip from somewhere else.
 		return ipLabel.getText() + ":" + connection.getLocalPort();
 	}
+	//} Getter
 	
 	//Overrides {
 	@Override
@@ -206,7 +208,7 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 			if (success) {
 				seatPanel.add(seatEntry);
 			} else {
-				System.out.println(seatEntry.hashCode() + " had an illegal name ("+seatEntry.getName()+"), closing...");
+				System.out.println(seatEntry.hashCode() + " had an illegal name (" + seatEntry.getName() + "), closing...");
 				seatsToClose.add(seatEntry);
 			}
 		});

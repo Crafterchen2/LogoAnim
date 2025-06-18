@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Objects;
 
 //Enums {
-public enum AssetEnum implements AssetData{
+public enum AssetEnum implements AssetData {
 	
 	EYE_2X1("2x1_eye", AssetType.EYE),
 	EYE_3X1("3x1_eye", AssetType.EYE),
@@ -56,6 +56,9 @@ public enum AssetEnum implements AssetData{
 	//} Constructor
 	
 	//Getter {
+	//} Getter
+	
+	//Overrides {
 	@Override
 	public String getName() {
 		return name;
@@ -92,7 +95,7 @@ public enum AssetEnum implements AssetData{
 		}
 		return cache.get(this);
 	}
-	//} Getter
+	//} Overrides
 	
 }
 //} Enums

@@ -11,15 +11,21 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
+//Classes {
 public class StreamFrame extends DisplayFrame {
 	
-	private int scale;
+	//Fields {
 	private final BufferedImage bgImg;
 	private final JMenuItem toggleChat = new JMenuItem("Chat is booting...");
 	private final JPanel logoPanel;
+	private int scale;
+	//} Fields
 	
+	//Constructor {
 	public StreamFrame() throws HeadlessException {
 		this(true);
 	}
@@ -55,20 +61,22 @@ public class StreamFrame extends DisplayFrame {
 		}
 		setContentPane(contentPane);
 		loadFrameIcon(this, "streaming_frame_icon");
-		addMenuEntry(0,"Open new remote manager").addActionListener(_ -> new RemoteManagerFrame(this));
+		addMenuEntry(0, "Open new remote manager").addActionListener(_ -> new RemoteManagerFrame(this));
 		addMenuEntry(-100, "Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
 		addMenuEntry(-100, toggleChat);
 		rebuildMenu();
 		repaint();
 	}
+	//} Constructor
 	
+	//Methods {
 	public boolean tryAddLogo(String name, LogoDisplay display) {
 		if (name == null || name.isBlank()) return false;
 		logoPanel.add(display, name);
 		return true;
 	}
 	
-	public void updateLogoPanel(){
+	public void updateLogoPanel() {
 		logoPanel.updateUI();
 	}
 	
@@ -78,12 +86,14 @@ public class StreamFrame extends DisplayFrame {
 	
 	private JPanel makeContentPane() {
 		return new JPanel(new RootLayout(), true) {
+			//Overrides {
 			@Override
 			protected void paintComponent(Graphics g) {
 				final int w = bgImg.getWidth() * getScale();
 				final int h = bgImg.getHeight() * getScale();
 				g.drawImage(bgImg, 0, 0, w, h, null);
 			}
+			//} Overrides
 		};
 	}
 	
@@ -103,10 +113,25 @@ public class StreamFrame extends DisplayFrame {
 		int scale = getScale();
 		return new Rectangle((bgImg.getWidth() - indent) * scale, (bgImg.getHeight() - indent) * scale, logo * scale, logo * scale);
 	}
+	//} Methods
 	
+	//Getter {
+	private boolean isFullscreen() {
+		return getScale() == getMaxScale();
+	}
+	//} Getter
+	
+	//Setter {
+	public void setFullscreen(boolean fullscreen) {
+		setScale((fullscreen) ? getMaxScale() : getMinScale());
+	}
+	//} Setter
+	
+	//Overrides {
 	@Override
 	protected DisplayMouseAdapter makeMouseAdapter() {
 		return new DisplayMouseAdapter(this) {
+			//Overrides {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (isFullscreen()) return;
@@ -121,20 +146,13 @@ public class StreamFrame extends DisplayFrame {
 					super.mouseClicked(e);
 				}
 			}
+			//} Overrides
 		};
-	}
-	
-	private boolean isFullscreen() {
-		return getScale() == getMaxScale();
 	}
 	
 	@Override
 	public int getScale() {
 		return scale;
-	}
-	
-	public void setFullscreen(boolean fullscreen) {
-		setScale((fullscreen) ? getMaxScale() : getMinScale());
 	}
 	
 	@Override
@@ -157,14 +175,19 @@ public class StreamFrame extends DisplayFrame {
 	public int getMinScale() {
 		return 1;
 	}
+	//} Overrides
 	
+	//Classes {
 	private class RootLayout implements LayoutManager {
 		
+		//Fields {
 		public static final String CHAT = "chat";
 		public static final String LOGO = "logo";
 		
 		private final HashMap<Component, String> map = HashMap.newHashMap(2);
+		//} Fields
 		
+		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
 			if (name == null || (!name.equals(CHAT) && !name.equals(LOGO))) throw new IllegalArgumentException("Illegal key for layout");
@@ -201,14 +224,18 @@ public class StreamFrame extends DisplayFrame {
 				}
 			}
 		}
+		//} Overrides
 		
 	}
 	
 	private class LogoLayout implements LayoutManager {
 		
+		//Fields {
 		public static final long displayID = -1L;
 		private final HashMap<Component, Long> displayMap = new HashMap<>();
+		//} Fields
 		
+		//Overrides {
 		@Override
 		public void addLayoutComponent(String name, Component comp) {
 			if (name == null || name.isEmpty()) {
@@ -258,7 +285,8 @@ public class StreamFrame extends DisplayFrame {
 				int h = pref.height;
 				int nDisplays = displayMap.size();
 				switch (nDisplays) {
-					case 0 -> {}
+					case 0 -> {
+					}
 					case 1 -> {
 						if (display != null) {
 							display.setBounds(0, 0, w, h);
@@ -272,7 +300,7 @@ public class StreamFrame extends DisplayFrame {
 							display.setBounds(0, y, w, h);
 						}
 						if (!guests.isEmpty()) {
-							guests.getFirst().setBounds(w,y, w,h);
+							guests.getFirst().setBounds(w, y, w, h);
 						}
 					}
 					case 3 -> {
@@ -282,7 +310,7 @@ public class StreamFrame extends DisplayFrame {
 						if (display != null) {
 							display.setBounds(x, 0, w, h);
 						}
-						for (int i = 0; i < guests.size() && i < 2 ; i++) {
+						for (int i = 0; i < guests.size() && i < 2; i++) {
 							guests.get(i).setBounds(w * i, h, w, h);
 						}
 					}
@@ -301,5 +329,8 @@ public class StreamFrame extends DisplayFrame {
 				}
 			}
 		}
+		//} Overrides
 	}
+	//} Classes
 }
+//} Classes

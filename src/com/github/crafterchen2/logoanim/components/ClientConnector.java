@@ -34,10 +34,10 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 		setLogo(logo);
 		button.addActionListener(e -> toggleConnect());
 		alias.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Alias"));
-		alias.setMinimumSize(new Dimension(60,0));
+		alias.setMinimumSize(new Dimension(60, 0));
 		ip.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Ip:Port"));
-		ip.setMinimumSize(new Dimension(60,0));
-		JPanel north = new JPanel(new GridLayout(1,2));
+		ip.setMinimumSize(new Dimension(60, 0));
+		JPanel north = new JPanel(new GridLayout(1, 2));
 		{
 			north.add(status);
 			north.add(button);
@@ -56,11 +56,15 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	//} Constructor
 	
 	//Methods {
+	private static void printDetailError(Throwable t) {
+		System.out.println("Error while connecting: " + t.getClass().getName() + '[' + t.getMessage() + ']');
+	}
+	
 	private void toggleConnect() {
 		if (isConnected()) {
 			disconnect();
 		} else {
-			connect();	
+			connect();
 		}
 	}
 	
@@ -112,7 +116,7 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 		} catch (RuntimeException e) {
 			Throwable t = e.getCause();
 			if (t == null) {
-				System.out.println("An unknown error occurred while trying to connect.");	
+				System.out.println("An unknown error occurred while trying to connect.");
 			} else {
 				printDetailError(t);
 			}
@@ -121,10 +125,6 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 			printDetailError(e);
 			connection = null;
 		}
-	}
-	
-	private static void printDetailError(Throwable t) {
-		System.out.println("Error while connecting: " + t.getClass().getName() + '[' + t.getMessage() + ']');
 	}
 	
 	private int parsePort(String port) {
@@ -161,6 +161,14 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	private void clearFields() {
 		alias.setText("");
 		ip.setText("");
+	}
+	
+	private void send() {
+		try {
+			connection.sendString(new LogoConfig(logo.getAsset(), logo.getMood()).toString());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	//} Methods
 	
@@ -206,14 +214,6 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	public void logoChanged() {
 		if (logo == null || !isConnected()) return;
 		if (!cooldown.isRunning()) cooldown.start();
-	}
-	
-	private void send() {
-		try {
-			connection.sendString(new LogoConfig(logo.getAsset(), logo.getMood()).toString());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	//} Overrides
 }
