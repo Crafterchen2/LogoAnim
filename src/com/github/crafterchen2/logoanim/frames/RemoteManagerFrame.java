@@ -7,9 +7,9 @@ import java.awt.*;
 
 public class RemoteManagerFrame extends JFrame {
 	
-	public RemoteManagerFrame(DisplayFrame logo) throws HeadlessException {
+	public RemoteManagerFrame(StreamFrame logo) throws HeadlessException {
 		super("Remote Manager");
-		RemoteManager manager = new RemoteManager();
+		RemoteManager manager = new RemoteManager(logo);
 		setMinimumSize(manager.getPreferredSize());
 		setSize(300,600);
 		setResizable(false);

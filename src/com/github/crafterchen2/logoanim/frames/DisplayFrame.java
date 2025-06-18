@@ -63,7 +63,6 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		addMenuEntry(Integer.MAX_VALUE, blinkBox);
 		addMenuEntry(0,"Open new controller").addActionListener(_ -> new LogoControlFrame(this));
 		addMenuEntry(0,"Open new library").addActionListener(_ -> new PresetLibraryFrame(this));
-		addMenuEntry(0,"Open new remote manager").addActionListener(_ -> new RemoteManagerFrame(this));
 		addMenuEntry(0,"Open new client connector").addActionListener(_ -> new ClientConnectorFrame(this));
 		addMenuEntry(Integer.MIN_VALUE + 100, "Copy to Clipboard").addActionListener(_ -> exportToClipboard());
 		addMenuEntry(Integer.MIN_VALUE, "Close").addActionListener(_ -> System.exit(0));

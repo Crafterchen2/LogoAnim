@@ -1,16 +1,19 @@
 package com.github.crafterchen2.logoanim.components;
 
 import com.github.crafterchen2.logoanim.*;
-import com.github.crafterchen2.logoanim.frames.DisplayFrame;
+import com.github.crafterchen2.logoanim.frames.StreamFrame;
 import com.github.crafterchen2.logoanim.remote.NetworkingDetails;
 import com.github.crafterchen2.logoanim.remote.ServerConnection;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.InputEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 //Classes {
 public class RemoteManager extends JPanel implements RemoteConnectionListener {
@@ -28,6 +31,7 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 	private final JLabel portLabel = new JLabel();
 	private final JLabel ipLabel = new JLabel();
 	private final JPanel seatPanel = new JPanel(new VerticalListLayout());
+	private final StreamFrame streamFrame;
 	//} Fields
 	
 	//Constructor {
@@ -35,8 +39,9 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		this(null);
 	}
 	
-	public RemoteManager(DisplayFrame logo) throws HeadlessException {
+	public RemoteManager(StreamFrame streamFrame) throws HeadlessException {
 		super(new BorderLayout());
+		this.streamFrame = streamFrame;
 		addRemoteConnectionListener(this);
 		ipLabel.setBorder(BorderFactory.createMatteBorder(0,0,1,0, new Color(0xA6A6A6)));
 		portLabel.setBorder(BorderFactory.createMatteBorder(1,0,0,0, new Color(0xFFFFFF)));
@@ -49,7 +54,7 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		closeConnection.setMargin(buttonInsets);
 		closeConnection.addActionListener(_ -> closeConnection());
 		closeConnection.setEnabled(false);
-		copyIpPort.addActionListener(_ -> copyIpPort());
+		copyIpPort.addActionListener(e -> copyIpPort((e.getModifiers() & InputEvent.SHIFT_MASK) != 0)); //BUG: InputEvent.SHIFT_MASK is deprecated
 		copyIpPort.setMargin(buttonInsets);
 		copyIpPort.setFont(copyIpPort.getFont().deriveFont(24f));
 		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 0));
@@ -88,7 +93,10 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		listeners.forEach(RemoteConnectionListener::connectionChanged);
 	}
 	
-	private void copyIpPort() {
+	private void copyIpPort(boolean useLocalHost) {
+		if (useLocalHost) {
+			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection("localhost:" + connection.getLocalPort()), null);
+		}
 		//TODO: Copy ip:port
 	}
 	
@@ -147,13 +155,28 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 	
 	public void closeSeat(ServerConnection.SocketInfo info) {
 		SeatEntry seat = seats.remove(info);
-		if (seat != null) seatPanel.remove(seat);
+		if (seat != null) {
+			seatPanel.remove(seat);
+			streamFrame.removeLogo(seat.display);
+		}
+		notifyAboutList();
+	}
+	
+	private void closeSeats(List<SeatEntry> seatsToClose) {
+		for (SeatEntry seat : seatsToClose) {
+			seat = seats.remove(seat.info);
+			if (seat != null) {
+				seatPanel.remove(seat);
+				streamFrame.removeLogo(seat.display);
+			}
+		}
 		notifyAboutList();
 	}
 	//} Methods
 	
 	public String getIpPort() {
-		return ipLabel.getText() + ":" + portLabel.getText();
+		//BUG: ipLabel does not only contain the ip, retrieve the ip from somewhere else.
+		return ipLabel.getText() + ":" + connection.getLocalPort();
 	}
 	
 	//Overrides {
@@ -177,8 +200,19 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 	@Override
 	public void listChanged() {
 		System.out.println("changed!");
-		seats.forEach((_, seatEntry) -> seatPanel.add(seatEntry));
+		final ArrayList<SeatEntry> seatsToClose = new ArrayList<>();
+		seats.forEach((_, seatEntry) -> {
+			boolean success = streamFrame.tryAddLogo(seatEntry.getName(), seatEntry.display);
+			if (success) {
+				seatPanel.add(seatEntry);
+			} else {
+				System.out.println(seatEntry.hashCode() + " had an illegal name ("+seatEntry.getName()+"), closing...");
+				seatsToClose.add(seatEntry);
+			}
+		});
 		seatPanel.updateUI();
+		streamFrame.updateLogoPanel();
+		closeSeats(seatsToClose);
 	}
 	//} Overrides
 	
@@ -187,12 +221,14 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		
 		//Fields {
 		private final LogoDisplay display = new LogoDisplay();
+		private final ServerConnection.SocketInfo info;
 		//} Fields
 		
 		//Constructor {
 		public SeatEntry(ServerConnection.SocketInfo info) {
-			//TODO: UI
+			this.info = info;
 			setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
+			setName(info.alias());
 			//setLayout(null);
 			//setSize(new Dimension(size * 6, size));
 			JButton terminate = new JButton("❌");
