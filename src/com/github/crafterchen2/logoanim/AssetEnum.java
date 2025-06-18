@@ -10,36 +10,36 @@ import java.util.Objects;
 //Enums {
 public enum AssetEnum implements AssetData {
 	
-	EYE_2X1("2x1_eye", AssetType.EYE),
-	EYE_3X1("3x1_eye", AssetType.EYE),
-	EYE_1X1("1x1_eye", AssetType.EYE),
-	EYE_2X2("2x2_eye", AssetType.EYE),
-	EYE_3X3("3x3_eye", AssetType.EYE),
-	EYE_2X3("2x3_eye", AssetType.EYE),
-	BIG_TRIANGLE_RIGHT("big_triangle_right_eye", AssetType.EYE),
-	BIG_TRIANGLE_LEFT("big_triangle_left_eye", AssetType.EYE),
-	TRIANGLE_RIGHT("triangle_right_eye", AssetType.EYE),
-	TRIANGLE_LEFT("triangle_left_eye", AssetType.EYE),
-	CROSS("cross_eye", AssetType.EYE),
-	PLUS("plus_eye", AssetType.EYE),
-	O("o_eye", AssetType.EYE),
-	UP("up_eye", AssetType.EYE),
-	RIGHT("right_eye", AssetType.EYE),
-	DOWN("down_eye", AssetType.EYE),
-	LEFT("left_eye", AssetType.EYE),
-	NEUTRAL("neutral_smile", AssetType.SMILE),
-	NORMAL("normal_smile", AssetType.SMILE),
-	HAPPY("very_happy_smile", AssetType.SMILE),
-	SAD("sad_smile", AssetType.SMILE),
-	VERY_SAD("very_sad_smile", AssetType.SMILE),
-	SMIRK("smirk_smile", AssetType.SMILE),
-	MULTI("multi_border_deco", AssetType.DECO),
-	SOLID("solid_border_deco", AssetType.DECO),
-	BLUSH("blush_deco", AssetType.DECO),
-	QUESTION("question_deco", AssetType.DECO),
-	EXCLAMATION("exclamation_deco", AssetType.DECO),
-	DOTS("3_dot_deco", AssetType.DECO),
-	ROBOT("robot_deco", AssetType.DECO),
+	EYE_2X1("2x1", AssetType.EYE),
+	EYE_3X1("3x1", AssetType.EYE),
+	EYE_1X1("1x1", AssetType.EYE),
+	EYE_2X2("2x2", AssetType.EYE),
+	EYE_3X3("3x3", AssetType.EYE),
+	EYE_2X3("2x3", AssetType.EYE),
+	BIG_TRIANGLE_RIGHT("big_triangle_right", AssetType.EYE),
+	BIG_TRIANGLE_LEFT("big_triangle_left", AssetType.EYE),
+	TRIANGLE_RIGHT("triangle_right", AssetType.EYE),
+	TRIANGLE_LEFT("triangle_left", AssetType.EYE),
+	CROSS("cross", AssetType.EYE),
+	PLUS("plus", AssetType.EYE),
+	CIRCLE("circle", AssetType.EYE),
+	UP("up", AssetType.EYE),
+	RIGHT("right", AssetType.EYE),
+	DOWN("down", AssetType.EYE),
+	LEFT("left", AssetType.EYE),
+	NEUTRAL("neutral", AssetType.SMILE),
+	NORMAL("normal", AssetType.SMILE),
+	HAPPY("very_happy", AssetType.SMILE),
+	SAD("sad", AssetType.SMILE),
+	VERY_SAD("very_sad", AssetType.SMILE),
+	SMIRK("smirk", AssetType.SMILE),
+	MULTI("multi_border", AssetType.DECO),
+	SOLID("solid_border", AssetType.DECO),
+	BLUSH("blush", AssetType.DECO),
+	QUESTION("question", AssetType.DECO),
+	EXCLAMATION("exclamation", AssetType.DECO),
+	DOTS("3_dot", AssetType.DECO),
+	ROBOT("robot", AssetType.DECO),
 	;
 	
 	//Fields {
@@ -54,9 +54,6 @@ public enum AssetEnum implements AssetData {
 		this.type = type;
 	}
 	//} Constructor
-	
-	//Getter {
-	//} Getter
 	
 	//Overrides {
 	@Override
@@ -73,7 +70,15 @@ public enum AssetEnum implements AssetData {
 	public BufferedImage getImg() {
 		if (!cache.containsKey(this)) {
 			try {
-				BufferedImage read = ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + getName() + ".png")));
+				String path = "/com/github/crafterchen2/logoanim/assets/logo/";
+				path += switch (type) {
+					case EYE -> "eyes/";
+					case SMILE -> "smiles/";
+					case DECO -> "decos/";
+				};
+				path += name;
+				path += ".png";
+				BufferedImage read = ImageIO.read(Objects.requireNonNull(AssetEnum.class.getResourceAsStream(path)));
 				if (read.getType() == BufferedImage.TYPE_BYTE_INDEXED) {
 					BufferedImage img = new BufferedImage(read.getWidth(), read.getHeight(), BufferedImage.TYPE_INT_ARGB);
 					Graphics g = img.getGraphics();

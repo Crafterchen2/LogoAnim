@@ -15,7 +15,7 @@ public class PresetLibraryFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(new PresetLibrary(logo));
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		DisplayFrame.loadFrameIcon(this, "preset_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "preset");
 		setVisible(true);
 	}
 	//} Constructor

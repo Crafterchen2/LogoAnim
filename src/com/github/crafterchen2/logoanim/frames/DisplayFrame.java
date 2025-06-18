@@ -77,7 +77,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 	//Methods {
 	public static void loadFrameIcon(JFrame frame, String name) {
 		try {
-			BufferedImage read = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/" + name + ".png")));
+			BufferedImage read = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/icons/" + name + ".png")));
 			frame.setIconImage(read);
 		} catch (IOException ignored) {
 		}

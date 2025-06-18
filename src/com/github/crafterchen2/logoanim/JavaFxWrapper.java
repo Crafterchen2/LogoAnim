@@ -137,7 +137,7 @@ public class JavaFxWrapper {
 			}
 			add(buttons, BorderLayout.NORTH);
 			add(input, BorderLayout.CENTER);
-			DisplayFrame.loadFrameIcon(this, "youtube_chat_control_frame_icon");
+			DisplayFrame.loadFrameIcon(this, "youtube_chat_control");
 			setVisible(true);
 		}
 		//} Constructor
@@ -179,7 +179,7 @@ public class JavaFxWrapper {
 			WebView view = new WebView();
 			engine = view.getEngine();
 			updateChatURL();
-			URL resource = getClass().getResource("/com/github/crafterchen2/logoanim/assets/chat.css");
+			URL resource = getClass().getResource("/com/github/crafterchen2/logoanim/assets/stream/chat.css");
 			if (resource != null) engine.setUserStyleSheetLocation(resource.toExternalForm());
 			chatPanel.setScene(new Scene(view));
 		}

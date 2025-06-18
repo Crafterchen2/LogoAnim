@@ -17,7 +17,7 @@ public class LogoControlFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(controller);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		DisplayFrame.loadFrameIcon(this, "control_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "control");
 		setVisible(true);
 	}
 	//} Constructor

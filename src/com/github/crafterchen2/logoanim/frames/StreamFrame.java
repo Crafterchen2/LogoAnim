@@ -39,7 +39,7 @@ public class StreamFrame extends DisplayFrame {
 		toggleChat.addActionListener(_ -> JavaFxWrapper.getWrapper().setControlVisibility(!JavaFxWrapper.getWrapper().getControlVisibility()));
 		toggleChat.setEnabled(false);
 		try {
-			bgImg = ImageIO.read(Objects.requireNonNull(DisplayFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/stream_bg.png")));
+			bgImg = ImageIO.read(Objects.requireNonNull(StreamFrame.class.getResourceAsStream("/com/github/crafterchen2/logoanim/assets/stream/background.png")));
 			Objects.requireNonNull(bgImg);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -60,7 +60,7 @@ public class StreamFrame extends DisplayFrame {
 			}).start();
 		}
 		setContentPane(contentPane);
-		loadFrameIcon(this, "streaming_frame_icon");
+		loadFrameIcon(this, "stream");
 		addMenuEntry(0, "Open new remote manager").addActionListener(_ -> new RemoteManagerFrame(this));
 		addMenuEntry(-100, "Toggle Fullscreen").addActionListener(_ -> setFullscreen(!isFullscreen()));
 		addMenuEntry(-100, toggleChat);

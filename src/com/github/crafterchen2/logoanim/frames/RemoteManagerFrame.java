@@ -18,7 +18,7 @@ public class RemoteManagerFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(manager);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		DisplayFrame.loadFrameIcon(this, "remote_manager_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "remote_manager");
 		setVisible(true);
 	}
 	//} Constructor

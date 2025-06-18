@@ -22,7 +22,7 @@ public class ClientConnectorFrame extends JFrame {
 		setLocationRelativeTo(logo);
 		setContentPane(connector);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		DisplayFrame.loadFrameIcon(this, "remote_client_frame_icon");
+		DisplayFrame.loadFrameIcon(this, "remote_client");
 		setVisible(true);
 	}
 	//} Constructor

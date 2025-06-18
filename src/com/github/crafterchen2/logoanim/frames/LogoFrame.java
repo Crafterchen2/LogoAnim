@@ -22,7 +22,7 @@ public class LogoFrame extends DisplayFrame {
 		super("Logo Display", defAssets, defMoods);
 		setScale(scale);
 		setContentPane(display);
-		loadFrameIcon(this, "logo_frame_icon");
+		loadFrameIcon(this, "logo");
 	}
 	//} Constructor
 	
