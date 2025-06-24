@@ -215,7 +215,7 @@ public class RemoteManager extends JPanel implements RemoteConnectionListener {
 		});
 		seatPanel.updateUI();
 		streamFrame.updateLogoPanel();
-		closeSeats(seatsToClose);
+		if (!seatsToClose.isEmpty()) closeSeats(seatsToClose);
 	}
 	//} Overrides
 	
