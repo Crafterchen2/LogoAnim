@@ -1,6 +1,7 @@
 import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.components.*;
 import com.github.crafterchen2.logoanim.frames.*;
+import com.github.crafterchen2.logoanim.layout.VerticalListLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,15 +16,20 @@ public class Tests {
 	public static void main(String[] args) {
 		//testStream();
 		//idRegexTest();
-		colorParseTest();
-		colorParseTestFor();
+		//colorParseTest();
+		//colorParseTestFor();
 		//regexTest();
 		//addingTest();
 		//managerLayoutTest();
-		serverTest();
+		//serverTest();
 		//clientTest();
 		//clientTest();
 		//clientTest();
+		testEditor();
+	}
+	
+	private static void testEditor(){
+		new ClientEditorFrame();
 	}
 	
 	/**

@@ -8,6 +8,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
 import static com.github.crafterchen2.logoanim.AssetEnum.*;
 import static com.github.crafterchen2.logoanim.MoodEnum.*;
@@ -18,17 +19,25 @@ public class PresetLibrary extends JComponent {
 	//Fields {
 	private final JSlider slider = new JSlider(5, 20, 10);
 	private final JPanel grid = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-	private DisplayFrame logo;
+	private final AssetProvider asset;
+	private final MoodProvider mood;
+	private final ArrayList<AssetSelector.Listener> assetListeners = new ArrayList<>();
+	private final ArrayList<MoodSelector.Listener> moodListeners = new ArrayList<>();
 	//} Fields
 	
 	//Constructor {
 	public PresetLibrary() {
-		this(null);
+		this(null, null);
 	}
 	
-	public PresetLibrary(DisplayFrame logo) {
+	public PresetLibrary(DisplayFrame frame) {
+		this(frame.getAsset(), frame.getMood());
+	}
+	
+	public PresetLibrary(AssetProvider asset, MoodProvider mood) {
 		setLayout(new BorderLayout());
-		setLogo(logo);
+		this.asset = asset;
+		this.mood = mood;
 		addDisplay(grid, EYE_2X2, EYE_2X2, AssetEnum.NORMAL, null, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL);
 		addDisplay(grid, TRIANGLE_RIGHT, TRIANGLE_LEFT, SAD, null, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL, MoodEnum.NORMAL);
 		addDisplay(grid, EYE_2X2, EYE_2X3, AssetEnum.NORMAL, null, MoodEnum.NORMAL, SANS, MoodEnum.NORMAL, MoodEnum.NORMAL);
@@ -70,6 +79,34 @@ public class PresetLibrary extends JComponent {
 	//} Constructor
 	
 	//Methods {
+	public void removeAssetChangedListener(AssetSelector.Listener listener) {
+		if (listener == null) throw new IllegalArgumentException("listener must not be null.");
+		assetListeners.remove(listener);
+	}
+	
+	public void addAssetChangedListener(AssetSelector.Listener listener) {
+		if (listener == null) throw new IllegalArgumentException("listener must not be null.");
+		assetListeners.add(listener);
+	}
+	
+	private void signalAssetUpdate() {
+		assetListeners.forEach(AssetSelector.Listener::assetChanged);
+	}
+	
+	public void removeMoodChangedListener(MoodSelector.Listener listener) {
+		if (listener == null) throw new IllegalArgumentException("listener must not be null.");
+		moodListeners.remove(listener);
+	}
+	
+	public void addMoodChangedListener(MoodSelector.Listener listener) {
+		if (listener == null) throw new IllegalArgumentException("listener must not be null.");
+		moodListeners.add(listener);
+	}
+	
+	private void signalMoodUpdate() {
+		moodListeners.forEach(MoodSelector.Listener::moodChanged);
+	}
+	
 	private void calcPrefSize(int width) {
 		final int size = calcDisplaySize(width);
 		int count;
@@ -91,11 +128,11 @@ public class PresetLibrary extends JComponent {
 		}
 	}
 	
-	private void addDisplay(JPanel grid, AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco) {
+	private void addDisplay(JPanel grid, AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco) {
 		addDisplay(grid, leftEye, rightEye, smile, deco, null, null, null, null);
 	}
 	
-	private void addDisplay(JPanel grid, AssetData leftEye, AssetData rightEye, AssetData smile, AssetData deco, MoodData leftEyeMood, MoodData rightEyeMood, MoodData smileMood, MoodData decoMood) {
+	private void addDisplay(JPanel grid, AssetEnum leftEye, AssetEnum rightEye, AssetEnum smile, AssetEnum deco, MoodEnum leftEyeMood, MoodEnum rightEyeMood, MoodEnum smileMood, MoodEnum decoMood) {
 		LogoDisplay display = new LogoDisplay(new AssetProvider.Default(leftEye, rightEye, smile, deco), new MoodProvider.Default(leftEyeMood, rightEyeMood, smileMood, decoMood));
 		int size = calcDisplaySize();
 		display.setPreferredSize(new Dimension(size, size));
@@ -113,10 +150,14 @@ public class PresetLibrary extends JComponent {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				display.setBorder(pressed);
-				if (logo == null) return;
-				logo.setAsset(display.getAsset());
-				logo.setMood(display.getMood());
-				logo.repaint();
+				if (asset != null) {
+					asset.setAsset(display.getAsset());
+					signalAssetUpdate();
+				}
+				if (mood != null) {
+					mood.setMood(display.getMood());
+					signalMoodUpdate();
+				}
 			}
 			
 			@Override
@@ -145,17 +186,5 @@ public class PresetLibrary extends JComponent {
 		return slider.getValue() * RegionEnum.base;
 	}
 	//} Methods
-	
-	//Getter {
-	public DisplayFrame getLogo() {
-		return logo;
-	}
-	//} Getter
-	
-	//Setter {
-	public void setLogo(DisplayFrame logo) {
-		this.logo = logo;
-	}
-	//} Setter
 }
 //} Classes

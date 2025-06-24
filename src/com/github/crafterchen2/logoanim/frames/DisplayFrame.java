@@ -40,7 +40,7 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		display = new LogoDisplay(defAssets, defMoods);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
-		setUndecorated(true);
+		setUndecorated(isUndecorated());
 		blinkBox.addActionListener(_ -> {
 			if (blinkBox.isSelected() == getShouldBlink()) return;
 			setShouldBlink(blinkBox.isSelected());
@@ -71,6 +71,10 @@ public abstract class DisplayFrame extends JFrame implements AssetProvider, Mood
 		addMenuEntry(Integer.MIN_VALUE, "Close").addActionListener(_ -> System.exit(0));
 		rebuildMenu();
 		setVisible(true);
+	}
+	
+	public boolean isUndecorated() {
+		return true;
 	}
 	//} Constructor
 	
