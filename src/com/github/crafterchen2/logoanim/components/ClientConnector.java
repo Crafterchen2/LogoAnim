@@ -32,6 +32,7 @@ public class ClientConnector extends JPanel implements LogoChangedListener {
 	public ClientConnector(DisplayFrame logo) {
 		super(new BorderLayout());
 		setLogo(logo);
+		setMinimumSize(new Dimension(300, 70));
 		button.addActionListener(e -> toggleConnect());
 		alias.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Alias"));
 		alias.setMinimumSize(new Dimension(60, 0));

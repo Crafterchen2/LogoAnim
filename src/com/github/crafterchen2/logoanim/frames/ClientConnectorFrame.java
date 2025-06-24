@@ -17,7 +17,8 @@ public class ClientConnectorFrame extends JFrame {
 		super("Client Connector");
 		connector = new ClientConnector(logo);
 		setResizable(true);
-		setMinimumSize(new Dimension(300, 110));
+		Dimension min = connector.getMinimumSize();
+		setMinimumSize(new Dimension(min.width, min.height + 40));
 		setSize(350, 110);
 		setLocationRelativeTo(logo);
 		setContentPane(connector);
