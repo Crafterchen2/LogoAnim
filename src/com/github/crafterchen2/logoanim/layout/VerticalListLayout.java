@@ -1,4 +1,4 @@
-package com.github.crafterchen2.logoanim.components;
+package com.github.crafterchen2.logoanim.layout;
 
 import java.awt.*;
 

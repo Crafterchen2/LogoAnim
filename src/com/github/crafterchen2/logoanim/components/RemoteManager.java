@@ -2,6 +2,7 @@ package com.github.crafterchen2.logoanim.components;
 
 import com.github.crafterchen2.logoanim.*;
 import com.github.crafterchen2.logoanim.frames.StreamFrame;
+import com.github.crafterchen2.logoanim.layout.VerticalListLayout;
 import com.github.crafterchen2.logoanim.remote.NetworkingDetails;
 import com.github.crafterchen2.logoanim.remote.ServerConnection;
 
