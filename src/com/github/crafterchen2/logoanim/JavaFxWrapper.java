@@ -32,10 +32,22 @@ public class JavaFxWrapper {
 	}
 	//} Constructor
 	
+	//Methods {
+	public void paintChatPanel(Graphics g) {
+		if (chatVisible) {
+			chatPanel.paint(g);
+		}
+	}
+	//} Methods
+	
 	//Getter {
 	public static JavaFxWrapper getWrapper() {
 		if (singleton == null) singleton = new JavaFxWrapper();
 		return singleton;
+	}
+	
+	public static boolean isInitialized() {
+		return singleton != null;
 	}
 	
 	public JComponent getChatPanel() {

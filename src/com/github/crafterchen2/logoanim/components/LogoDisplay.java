@@ -10,10 +10,9 @@ import java.util.HashMap;
 public class LogoDisplay extends JComponent implements AssetProvider, MoodProvider {
 	
 	//Fields {
-	private final HashMap<RegionEnum, AssetData> assets = HashMap.newHashMap(RegionEnum.values().length);
-	private final HashMap<RegionEnum, MoodData> moods = HashMap.newHashMap(RegionEnum.values().length);
-	
 	public boolean blink = false;
+	
+	private final LogoPainter painter;
 	//} Fields
 	
 	//Constructor {
@@ -24,47 +23,43 @@ public class LogoDisplay extends JComponent implements AssetProvider, MoodProvid
 	}
 	
 	public LogoDisplay(ImmutableAssetProvider defAssets, ImmutableMoodProvider defMoods) {
-		setAsset(defAssets);
-		setMood(defMoods);
+		painter = new LogoPainter(defAssets, defMoods);
 		setDoubleBuffered(true);
+		setBackground(new Color(0,0,0));
+		setOpaque(true);
 	}
 	//} Constructor
 	
 	//Overrides {
 	@Override
 	protected void paintComponent(Graphics g) {
-		g.setColor(new Color(0, 0, 0));
-		int w = getWidth();
-		int h = getHeight();
-		if (w <= 0 && h <= 0) return;
-		g.setClip(0, 0, w, h);
-		g.fillRect(0, 0, w, h);
-		RegionEnum[] regs = RegionEnum.values();
-		for (int i = regs.length - 1; i >= 0; i--) {
-			if (regs[i].type == AssetType.EYE && blink) continue;
-			AssetData asset = getAsset(regs[i]);
-			if (asset != null) asset.paint(g, regs[i], getMood(regs[i]));
+		painter.blink = blink;
+		Color background = getBackground();
+		if (background != null) {
+			g.setColor(background);
+			g.fillRect(0, 0, getWidth(), getHeight());
 		}
+		painter.paint(g, getWidth(), getHeight());
 	}
 	
 	@Override
 	public MoodData getMood(RegionEnum reg) {
-		return moods.get(reg);
+		return painter.getMood(reg);
 	}
 	
 	@Override
 	public AssetData getAsset(RegionEnum reg) {
-		return assets.get(reg);
+		return painter.getAsset(reg);
 	}
 	
 	@Override
 	public void setMood(RegionEnum reg, MoodData mood) {
-		moods.put(reg, mood);
+		painter.setMood(reg, mood);
 	}
 	
 	@Override
 	public void setAsset(RegionEnum reg, AssetData asset) {
-		assets.put(reg, asset);
+		painter.setAsset(reg, asset);
 	}
 	//} Overrides
 	

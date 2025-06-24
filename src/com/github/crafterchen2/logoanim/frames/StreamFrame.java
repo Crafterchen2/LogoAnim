@@ -22,6 +22,7 @@ public class StreamFrame extends DisplayFrame {
 	private final BufferedImage bgImg;
 	private final JMenuItem toggleChat = new JMenuItem("Chat is booting...");
 	private final JPanel logoPanel;
+	private final BufferedImage chatImg;
 	private int scale;
 	//} Fields
 	
@@ -44,6 +45,7 @@ public class StreamFrame extends DisplayFrame {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		chatImg = new BufferedImage(80 * getMaxScale(), 124 * getMaxScale(), BufferedImage.TYPE_INT_RGB);
 		setFullscreen(fullscreen);
 		JPanel contentPane = makeContentPane();
 		{
@@ -52,12 +54,6 @@ public class StreamFrame extends DisplayFrame {
 				logoPanel.add(display, "");
 			}
 			contentPane.add(logoPanel, RootLayout.LOGO);
-			new Thread(() -> {
-				JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
-				contentPane.add(wrapper.getChatPanel(), RootLayout.CHAT);
-				toggleChat.setText("Toggle Chat Controller");
-				toggleChat.setEnabled(true);
-			}).start();
 		}
 		setContentPane(contentPane);
 		loadFrameIcon(this, "stream");
@@ -66,6 +62,35 @@ public class StreamFrame extends DisplayFrame {
 		addMenuEntry(-100, toggleChat);
 		rebuildMenu();
 		repaint();
+		Thread chatThread = new Thread(() -> {
+			Graphics g = chatImg.getGraphics();
+			long time = System.currentTimeMillis();
+			long lastDelta;
+			while (Thread.currentThread().isAlive()) {
+				JavaFxWrapper wrapper = JavaFxWrapper.getWrapper();
+				if (wrapper.getChatVisible()) {
+					time = System.currentTimeMillis();
+					wrapper.paintChatPanel(g);
+					g.setColor(Color.BLACK);
+					g.fillRect(0,0,30,23);
+					g.setColor(Color.WHITE);
+					g.drawString((lastDelta = System.currentTimeMillis() - time) + "", 5, 17);
+					contentPane.repaint();
+					if (lastDelta > 16) continue;
+					try {
+						Thread.sleep(16 - lastDelta);//~= 60fps max, but chat avg is 200 ms anyway
+					} catch (InterruptedException _) {
+						
+					}
+				}
+			}
+		});
+		SwingUtilities.invokeLater(() -> {
+			JavaFxWrapper.getWrapper().getChatPanel().setBounds(0,0,80 * getMaxScale(), 124 * getMaxScale());
+			chatThread.start();
+			toggleChat.setText("Toggle Chat Controller");
+			toggleChat.setEnabled(true);
+		});
 	}
 	//} Constructor
 	
@@ -92,6 +117,10 @@ public class StreamFrame extends DisplayFrame {
 				final int w = bgImg.getWidth() * getScale();
 				final int h = bgImg.getHeight() * getScale();
 				g.drawImage(bgImg, 0, 0, w, h, null);
+				if (JavaFxWrapper.isInitialized() && JavaFxWrapper.getWrapper().getChatVisible()) {
+					Rectangle chatRect = calcChatPos();
+					g.drawImage(chatImg, chatRect.x, chatRect.y, chatRect.width, chatRect.height, null);
+				}
 			}
 			//} Overrides
 		};
